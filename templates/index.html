@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SQL Playground</title>
+<!-- ✅ Chart.js for Visualization -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+/* General Styles */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1f1c2c, #928dab);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-size: cover;
+    color: #fff;
+    overflow-x: hidden;
+}
+
+/* Landing Page */
+#landing {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    transition: opacity 0.5s ease;
+}
+
+#landing h1 {
+    font-size: 3rem;
+    background: linear-gradient(to right, #00ff99, #00ffff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 20px;
+}
+
+#landing p {
+    font-size: 1.2rem;
+    margin-bottom: 40px;
+    color: #e0e0e0;
+}
+
+#landing button {
+    padding: 15px 40px;
+    font-size: 1.2rem;
+    border-radius: 30px;
+    width: 200PX;
+    border: none;
+    cursor: pointer;
+    background: linear-gradient(to right, #00ff99, #00ffff);
+    color: #0d0d0d;
+    transition: transform 0.2s;
+}
+
+#landing button:hover { transform: scale(1.05); }
+
+/* Main App */
+#app {
+    display: none;
+    padding: 30px 20px 50px 20px;
+    max-width: 1200px;
+    margin: auto;
+}
+
+/* Tabs */
+.tab {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 20px;
+}
+
+.tab button {
+    flex: 1;
+    padding: 12px 20px;
+    border-radius: 10px 10px 0 0;
+    border: none;
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.tab button.active {
+    background: linear-gradient(45deg,#00ff99,#00ffff);
+    color: #0d0d0d;
+}
+
+/* Tab content */
+.tabcontent {
+    display: none;
+    padding: 20px;
+    background: rgba(0,0,0,0.6);
+    border-radius: 0 10px 10px 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
+
+h2 {
+    color: #00ffff;
+    margin-bottom: 10px;
+}
+
+/* Forms */
+select, input, textarea, button {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 8px;
+    border: 1px solid #00ff99;
+    background: rgba(0,0,0,0.7);
+    color: #00ff99;
+    font-size: 1rem;
+}
+
+textarea { resize: vertical; }
+
+button {
+    background: linear-gradient(45deg,#00ff99,#00ffff);
+    color: #0d0d0d;
+    font-weight: bold;
+}
+
+button:hover { opacity: 0.9; }
+
+/* Tables */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th, td {
+    border: 1px solid #00ff99;
+    padding: 10px;
+    text-align: left;
+}
+
+th {
+    background: rgba(0,255,153,0.2);
+}
+
+/* Pre */
+pre {
+    background: rgba(0,0,0,0.6);
+    padding: 15px;
+    border-radius: 8px;
+    overflow-x: auto;
+}
+
+/* DB Description */
+#db_description {
+    background: rgba(0,255,0,0.1);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+#db_prompt, #new_db_name, #add_row_values, #question,
+#connect_db_path, #connect_host, #connect_port,
+#connect_database, #connect_user, #connect_password,
+#viz_prompt {
+    width: calc(100% - 25px);
+}
+</style>
+</head>
+<body>
+
+<!-- Landing Page -->
+<div id="landing">
+    <h1>Welcome to SQL Playground</h1>
+    <p>Interact with your databases, generate SQL, manage tables, and visualize data, all in one powerful interface.</p>
+    <button onclick="showApp()">Next</button>
+</div>
+
+<!-- Main App -->
+<div id="app">
+    <div class="tab">
+        <button class="tablinks" onclick="openTab(event,'Databases')">Databases</button>
+        <button class="tablinks" onclick="openTab(event,'Query')">Query</button>
+        <button class="tablinks" onclick="openTab(event,'Manage')">Manage Rows</button>
+        <button class="tablinks" onclick="openTab(event,'CreateDB')">Create DB</button>
+        <button class="tablinks" onclick="openTab(event,'ConnectDB')">Connect DB</button>
+        <!-- ✅ New Visualization tab -->
+        <button class="tablinks" onclick="openTab(event,'Visualization')">Visualization</button>
+    </div>
+
+    <!-- Databases -->
+    <div id="Databases" class="tabcontent">
+        <h2>Databases & Schema</h2>
+        <select id="db_select"></select>
+        <button onclick="loadSchema()">Load Schema</button>
+        <pre id="schema_view"></pre>
+    </div>
+
+    <!-- Query -->
+    <div id="Query" class="tabcontent">
+        <h2>Ask a Question</h2>
+        <select id="db_query_select" onchange="loadDBDescription()"></select>
+        <pre id="db_description">Database description will appear here...</pre>
+        <textarea id="question" placeholder="Ask a question about the selected DB"></textarea>
+        <button onclick="askQuery()">Run Query</button>
+        <h3>Generated SQL:</h3>
+        <pre id="sql_display"></pre>
+        <h3>Results:</h3>
+        <div id="results"></div>
+    </div>
+
+    <!-- Manage Rows -->
+    <div id="Manage" class="tabcontent">
+        <h2>Manage Table Rows</h2>
+        <select id="db_manage_select" onchange="loadTables()"></select>
+        <select id="table_select" onchange="updateRowPlaceholder();loadTableRows()"></select>
+        <input type="text" id="add_row_values" placeholder="">
+        <button onclick="addRow()">Add Row</button>
+        <div id="table_editor"></div>
+    </div>
+
+    <!-- Create DB -->
+    <div id="CreateDB" class="tabcontent">
+        <h2>Create New Database</h2>
+        <input type="text" id="new_db_name" placeholder="Database name">
+        <textarea id="db_prompt" rows="4" placeholder="Describe tables and columns, e.g., students(id,name,age); courses(id,name,credits)"></textarea>
+        <button onclick="createDB()">Create Database</button>
+        <pre id="create_db_result"></pre>
+    </div>
+
+    <!-- Connect DB -->
+    <div id="ConnectDB" class="tabcontent">
+        <h2>Connect Your Database</h2>
+        <select id="connect_db_type">
+            <option value="sqlite">SQLite</option>
+            <option value="mysql">MySQL</option>
+            <option value="postgresql">PostgreSQL</option>
+        </select>
+        <input type="text" id="connect_db_path" placeholder="SQLite file path">
+        <input type="text" id="connect_host" placeholder="Host" style="display:none;">
+        <input type="text" id="connect_port" placeholder="Port" style="display:none;">
+        <input type="text" id="connect_database" placeholder="Database Name" style="display:none;">
+        <input type="text" id="connect_user" placeholder="Username" style="display:none;">
+        <input type="password" id="connect_password" placeholder="Password" style="display:none;">
+        <button onclick="connectDB()">Connect</button>
+        <pre id="connect_db_result"></pre>
+    </div>
+
+    <!-- ✅ Visualization Tab -->
+    <div id="Visualization" class="tabcontent">
+        <h2>Data Visualization</h2>
+        <select id="viz_db_select"></select>
+        <textarea id="viz_prompt" placeholder="e.g., Show a bar chart of students per course"></textarea>
+        <button onclick="generateVisualization()">Generate Chart</button>
+
+        <h3>Generated SQL:</h3>
+        <pre id="viz_sql"></pre>
+
+        <h3>Chart:</h3>
+        <canvas id="viz_chart" style="max-width:100%;height:400px;"></canvas>
+
+        <h3>Summary:</h3>
+        <p id="viz_summary"></p>
+    </div>
+</div>
+
+<script>
+// Show main app
+function showApp(){
+    document.getElementById('landing').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.querySelectorAll('.tablinks')[0].click();
+}
+
+// Tab switching
+function openTab(evt,tabName){
+    var i,tabcontent=document.getElementsByClassName("tabcontent"),tablinks=document.getElementsByClassName("tablinks");
+    for(i=0;i<tabcontent.length;i++) tabcontent[i].style.display="none";
+    for(i=0;i<tablinks.length;i++) tablinks[i].className=tablinks[i].className.replace(" active","");
+    document.getElementById(tabName).style.display="block";
+    evt.currentTarget.className+=" active";
+}
+
+// DB connection inputs
+document.getElementById("connect_db_type").addEventListener("change", function(){
+  const type=this.value;
+  document.getElementById("connect_db_path").style.display=type==="sqlite"?"block":"none";
+  ["connect_host","connect_port","connect_database","connect_user","connect_password"].forEach(id=>{
+    document.getElementById(id).style.display=type!=="sqlite"?"block":"none";
+  });
+});
+
+// Connect DB
+async function connectDB(){
+  const type=document.getElementById("connect_db_type").value;
+  let payload={db_type:type};
+  if(type==="sqlite"){payload.path=document.getElementById("connect_db_path").value;}
+  else{
+    payload.host=document.getElementById("connect_host").value;
+    payload.port=document.getElementById("connect_port").value;
+    payload.database=document.getElementById("connect_database").value;
+    payload.user=document.getElementById("connect_user").value;
+    payload.password=document.getElementById("connect_password").value;
+  }
+  const resp=await fetch("/connect_db",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+  const data=await resp.json();
+  document.getElementById("connect_db_result").innerText=data.error?data.error:JSON.stringify(data.schema,null,2);
+  if(!data.error) alert("Database connected successfully!");
+}
+
+// Load databases for tabs
+async function loadDatabases(){
+  const resp=await fetch("/databases"); const data=await resp.json();
+  ["db_select","db_query_select","db_manage_select","viz_db_select"].forEach(id=>{
+    const sel=document.getElementById(id); sel.innerHTML="";
+    data.databases.forEach(db=>{let o=document.createElement("option");o.value=db;o.text=db;sel.appendChild(o);});
+  });
+  loadTables();
+}
+loadDatabases();
+
+// Load schema
+async function loadSchema(){
+  const db=document.getElementById("db_select").value;
+  const resp=await fetch("/schema",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({db_name:db})});
+  const data=await resp.json();
+  document.getElementById("schema_view").innerText=data.error?data.error:JSON.stringify(data.schema,null,2);
+}
+
+// Load DB description
+async function loadDBDescription(){
+  const db=document.getElementById("db_query_select").value;
+  if(!db) return;
+  const resp=await fetch("/db_description",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({db_name:db})});
+  const data=await resp.json();
+  document.getElementById("db_description").innerText=data.error?data.error:data.description;
+}
+
+// Query
+async function askQuery(){
+  const db=document.getElementById("db_query_select").value;
+  const question=document.getElementById("question").value;
+  const resp=await fetch("/ask",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({db_name:db,question:question})});
+  const data=await resp.json();
+  if(data.error){alert(data.error);return;}
+  document.getElementById("sql_display").innerText=data.sql;
+  const div=document.getElementById("results"); if(data.result.error){div.innerText=data.result.error;return;}
+  let html="<table><thead><tr>"; data.result.columns.forEach(c=>html+="<th>"+c+"</th>"); html+="</tr></thead><tbody>";
+  data.result.rows.forEach(r=>{html+="<tr>"; data.result.columns.forEach(c=>html+="<td>"+r[c]+"</td>"); html+="</tr>";}); html+="</tbody></table>"; div.innerHTML=html;
+}
+
+// Create DB
+async function createDB(){
+  const db_name=document.getElementById("new_db_name").value;
+  const prompt=document.getElementById("db_prompt").value;
+  if(!db_name||!prompt){alert("Provide database name and prompt");return;}
+  const resp=await fetch("/create_db",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({db_name,prompt})});
+  const data=await resp.json();
+  document.getElementById("create_db_result").innerText=data.error?data.error:"Database Created!\n"+data.sql_schema;
+  loadDatabases();
+}
+
+// Manage Rows
+async function loadTables(){
+  const db=document.getElementById("db_manage_select").value;
+  const resp=await fetch("/schema",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({db_name:db})});
+  const data=await resp.json(); const sel=document.getElementById("table_select"); sel.innerHTML='';
+  if(data.schema) Object.keys(data.schema).forEach(t=>{let o=document.createElement("option");o.value=t;o.text=t;o.selected=true;sel.appendChild(o);});
+  updateRowPlaceholder();
+  loadTableRows();
+}
+
+function updateRowPlaceholder() {
+  const db = document.getElementById("db_manage_select").value;
+  const table = document.getElementById("table_select").value;
+  if (!db || !table) return;
+  fetch("/schema", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ db_name: db })
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (data.schema && data.schema[table.toLowerCase()]) {
+        document.getElementById("add_row_values").placeholder =
+          "Write all values according to number of columns separated by commas e.g if cols are id, name and age then add like 1,abc,22";
+      }
+    });
+}
+async function loadTableRows() {
+  const db = document.getElementById("db_manage_select").value;
+  const table = document.getElementById("table_select").value;
+
+  const resp = await fetch("/ask", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ db_name: db, question: `SELECT * FROM ${table}` })
+  });
+
+  const data = await resp.json();
+  const div = document.getElementById("table_editor");
+
+  if (data.result.error) {
+    div.innerText = data.result.error;
+    return;
+  }
+
+  let html = "<table><thead><tr>";
+  data.result.columns.forEach(c => html += `<th>${c}</th>`);
+  html += "<th>Actions</th></tr></thead><tbody>";
+
+  // ✅ Use the first real column name as the key
+  const keyCol = data.result.columns[0]; // e.g. "student_id"
+
+  data.result.rows.forEach(r => {
+    html += "<tr>";
+    data.result.columns.forEach(c => html += `<td>${r[c]}</td>`);
+    html += `<td><button onclick='deleteRow("${db}","${table}","${keyCol}=${r[keyCol]}")'>Delete</button></td>`;
+    html += "</tr>";
+  });
+
+  html += "</tbody></table>";
+  div.innerHTML = html;
+}
+
+async function addRow(){
+  const db=document.getElementById("db_manage_select").value;
+  const table=document.getElementById("table_select").value;
+  const values=document.getElementById("add_row_values").value;
+  const resp=await fetch("/add_row",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({db_name:db,table,values})});
+  const data=await resp.json(); if(data.error){alert(data.error);return;} alert("Row added!"); loadTableRows();
+}
+async function deleteRow(db,table,condition){
+  const resp=await fetch("/delete_row",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({db_name:db,table,condition})});
+  const data=await resp.json(); if(data.error){alert(data.error);return;} alert("Row deleted!"); loadTableRows();
+}
+
+// ✅ Visualization logic
+let vizChart;
+async function generateVisualization(){
+  const db = document.getElementById("viz_db_select").value;
+  const prompt = document.getElementById("viz_prompt").value;
+  if(!db || !prompt){alert("Select DB and enter a prompt"); return;}
+
+  const resp = await fetch("/visualize", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({db_name:db, prompt:prompt})
+  });
+  const data = await resp.json();
+  if(data.error){ alert(data.error); return; }
+
+  document.getElementById("viz_sql").innerText = data.sql;
+  document.getElementById("viz_summary").innerText = data.summary;
+
+  const cols = data.columns;
+  const rows = data.rows;
+  if(cols.length < 2){ alert("Need at least two columns for a chart"); return; }
+
+  const labels = rows.map(r => r[cols[0]]);
+  const values = rows.map(r => Number(r[cols[1]]) || 0);
+
+  if(vizChart) vizChart.destroy();
+  const ctx = document.getElementById("viz_chart").getContext("2d");
+  vizChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: cols[1],
+        data: values,
+        backgroundColor: 'rgba(0, 255, 153, 0.6)',
+        borderColor: 'rgba(0, 255, 153, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: true, labels:{color:'#fff'} },
+        title: { display: true, text: prompt, color:'#fff', font:{size:18} }
+      },
+      scales: {
+        x: { ticks:{color:'#fff'} },
+        y: { ticks:{color:'#fff'}, beginAtZero:true }
+      }
+    }
+  });
+}
+</script>
+</body>
+</html>
