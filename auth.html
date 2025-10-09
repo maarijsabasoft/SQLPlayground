@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SQL Playground - Authentication</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #000000, #1a1a1a);
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            background-size: cover;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .auth-container {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(to right, #aaaaaa, #dddddd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+        .tabs button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px 8px 0 0;
+            background: rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .tabs button.active {
+            background: linear-gradient(45deg, #1a1a1a, #333333);
+            color: #ffffff;
+        }
+        .tabcontent {
+            display: none;
+            padding: 20px;
+            border-radius: 0 0 8px 8px;
+            background: rgba(0, 0, 0, 0.6);
+        }
+        .tabcontent.active {
+            display: block;
+        }
+        input {
+            width: calc(100% - 24px);
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #444444;
+            background: rgba(0, 0, 0, 0.7);
+            color: #e0e0e0;
+            font-size: 1rem;
+        }
+        button.submit {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            background: linear-gradient(45deg, #1a1a1a, #333333);
+            color: #ffffff;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+        button.submit:hover {
+            opacity: 0.9;
+        }
+        .oauth-buttons {
+            margin-top: 20px;
+        }
+        .oauth-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #444444;
+            background: rgba(0, 0, 0, 0.7);
+            color: #e0e0e0;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .oauth-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .oauth-button img {
+            width: 24px;
+            height: 24px;
+        }
+        .error {
+            color: #ff6666;
+            margin-top: 10px;
+            display: none;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <h1>SQL Playground</h1>
+        <div class="tabs">
+            <button class="tablinks active" onclick="openTab('login')">Login</button>
+            <button class="tablinks" onclick="openTab('signup')">Sign Up</button>
+        </div>
+        <div id="login" class="tabcontent active">
+            <input type="email" id="login-email" placeholder="Email" required>
+            <input type="password" id="login-password" placeholder="Password" required>
+            <button class="submit" onclick="login()">Login</button>
+            <p class="error" id="login-error"></p>
+            <div class="oauth-buttons">
+                <button class="oauth-button" onclick="window.location.href='/login/google'">
+                    <img src="https://www.google.com/favicon.ico" alt="Google">
+                    Continue with Google
+                </button>
+                <button class="oauth-button" onclick="window.location.href='/login/github'">
+                    <img src="https://github.com/favicon.ico" alt="GitHub">
+                    Continue with GitHub
+                </button>
+            </div>
+        </div>
+        <div id="signup" class="tabcontent">
+            <input type="text" id="signup-username" placeholder="Username" required>
+            <input type="email" id="signup-email" placeholder="Email" required>
+            <input type="password" id="signup-password" placeholder="Password" required>
+            <button class="submit" onclick="signup()">Sign Up</button>
+            <p class="error" id="signup-error"></p>
+            <div class="oauth-buttons">
+                <button class="oauth-button" onclick="window.location.href='/login/google'">
+                    <img src="https://www.google.com/favicon.ico" alt="Google">
+                    Continue with Google
+                </button>
+                <button class="oauth-button" onclick="window.location.href='/login/github'">
+                    <img src="https://github.com/favicon.ico" alt="GitHub">
+                    Continue with GitHub
+                </button>
+            </div>
+        </div>
+    </div>
+    <script>
+        function openTab(tabName) {
+            document.querySelectorAll('.tabcontent').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tablinks').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            document.querySelector(`button[onclick="openTab('${tabName}')"]`).classList.add('active');
+            document.getElementById('login-error').style.display = 'none';
+            document.getElementById('signup-error').style.display = 'none';
+        }
+
+        async function login() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const error = document.getElementById('login-error');
+            if (!email || !password) {
+                error.textContent = 'Email and password are required';
+                error.style.display = 'block';
+                return;
+            }
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password }),
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                if (data.error) {
+                    error.textContent = data.error;
+                    error.style.display = 'block';
+                } else {
+                    window.location.href = data.redirect;
+                }
+            } catch (err) {
+                error.textContent = 'An error occurred. Please try again.';
+                error.style.display = 'block';
+            }
+        }
+
+        async function signup() {
+            const username = document.getElementById('signup-username').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const error = document.getElementById('signup-error');
+            if (!username || !email || !password) {
+                error.textContent = 'Username, email, and password are required';
+                error.style.display = 'block';
+                return;
+            }
+            try {
+                const response = await fetch('/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password }),
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                if (data.error) {
+                    error.textContent = data.error;
+                    error.style.display = 'block';
+                } else {
+                    window.location.href = data.redirect;
+                }
+            } catch (err) {
+                error.textContent = 'An error occurred. Please try again.';
+                error.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>
