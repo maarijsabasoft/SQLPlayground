@@ -122,6 +122,37 @@
             from { opacity: 0; }
             to { opacity: 1; }
         }
+        .oauth-buttons {
+      margin-top: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .oauth-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      color: #333;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 0.7rem;
+      font-weight: 600;
+      font-size: clamp(0.85rem, 2.5vw, 1rem);
+      text-decoration: none;
+      transition: background 0.2s, color 0.2s, transform 0.15s;
+    }
+    .oauth-btn.google { background: #4285F4; color: #fff; }
+    .oauth-btn.github { background: #24292e; color: #fff; }
+    .oauth-btn img {
+      width: 20px;
+      height: 20px;
+      margin-right: 0.5rem;
+    }
+    .oauth-btn:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
     </style>
 </head>
 <body>
@@ -137,14 +168,12 @@
             <button class="submit" onclick="login()">Login</button>
             <p class="error" id="login-error"></p>
             <div class="oauth-buttons">
-                <!-- <button class="oauth-button" onclick="window.location.href='/login/google'">
-                    <img src="https://www.google.com/favicon.ico" alt="Google">
-                    Continue with Google
-                </button>
-                <button class="oauth-button" onclick="window.location.href='/login/github'">
-                    <img src="https://github.com/favicon.ico" alt="GitHub">
-                    Continue with GitHub
-                </button> -->
+                <a href="{{ url_for('google_login') }}" class="oauth-btn google" aria-label="Login with Google">
+        <img src="https://www.google.com/favicon.ico" alt="Google logo"> Login with Google
+      </a>
+      <a href="{{ url_for('github_login') }}" class="oauth-btn github" aria-label="Login with GitHub">
+        <img src="https://github.githubassets.com/favicons/favicon.png" alt="GitHub logo"> Login with GitHub
+      </a>
             </div>
         </div>
         <div id="signup" class="tabcontent">
@@ -154,14 +183,12 @@
             <button class="submit" onclick="signup()">Sign Up</button>
             <p class="error" id="signup-error"></p>
             <div class="oauth-buttons">
-                <!-- <button class="oauth-button" onclick="window.location.href='/login/google'">
-                    <img src="https://www.google.com/favicon.ico" alt="Google">
-                    Continue with Google
-                </button>
-                <button class="oauth-button" onclick="window.location.href='/login/github'">
-                    <img src="https://github.com/favicon.ico" alt="GitHub">
-                    Continue with GitHub
-                </button> -->
+                <a href="{{ url_for('google_login') }}" class="oauth-btn google" aria-label="Login with Google">
+        <img src="https://www.google.com/favicon.ico" alt="Google logo"> Login with Google
+      </a>
+      <a href="{{ url_for('github_login') }}" class="oauth-btn github" aria-label="Login with GitHub">
+        <img src="https://github.githubassets.com/favicons/favicon.png" alt="GitHub logo"> Login with GitHub
+      </a>
             </div>
         </div>
     </div>
