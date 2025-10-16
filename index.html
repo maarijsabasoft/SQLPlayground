@@ -183,7 +183,7 @@ pre {
     margin-bottom: 15px;
 }
 #db_prompt, #new_db_name, #add_row_values, #question,
-#connect_db_path, #connect_host, #connect_port,
+#connect_db_file, #connect_host, #connect_port,
 #connect_database, #connect_user, #connect_password,
 #viz_prompt {
     width: calc(100% - 25px);
@@ -337,22 +337,19 @@ pre {
         <button class="tablinks" onclick="checkTabAccess('Visualization')">Visualization</button>
         <button class="tablinks" onclick="openTab(event,'Subscriptions')">Subscriptions</button>
     </div>
-<div id="Databases" class="tabcontent">
-    <p>
-        If you want to make a demo, you can download the sample database file 
-        <a href="https://drive.google.com/drive/folders/1TM0L-pWEI_MsrPpEmHc4ojLhHnrgEd29?usp=sharing" target="_blank">
-            demo.db
-        </a> 
-        and connect to it from your computer.
-    </p>
-
-    <h2>Databases & Schema</h2>
-    <select id="db_select"></select>
-    <button onclick="loadSchema()">Load Schema</button>
-    <pre id="schema_view"></pre>
-</div>
-
-
+    <div id="Databases" class="tabcontent">
+        <p>
+            If you want to make a demo, you can download the sample database file 
+            <a href="https://drive.google.com/drive/folders/1TM0L-pWEI_MsrPpEmHc4ojLhHnrgEd29?usp=sharing" target="_blank">
+                demo.db
+            </a> 
+            and connect to it from your computer.
+        </p>
+        <h2>Databases & Schema</h2>
+        <select id="db_select"></select>
+        <button onclick="loadSchema()">Load Schema</button>
+        <pre id="schema_view"></pre>
+    </div>
     <div id="Query" class="tabcontent">
         <h2>Ask a Question</h2>
         <select id="db_query_select" onchange="loadDBDescription()"></select>
@@ -388,7 +385,7 @@ pre {
             <option value="mysql">MySQL</option>
             <option value="postgresql">PostgreSQL</option>
         </select>
-        <input type="text" id="connect_db_path" placeholder="SQLite file path">
+        <input type="file" id="connect_db_file" accept=".db">
         <input type="text" id="connect_host" placeholder="Host" style="display:none;">
         <input type="text" id="connect_port" placeholder="Port" style="display:none;">
         <input type="text" id="connect_database" placeholder="Database Name" style="display:none;">
@@ -498,45 +495,12 @@ async function login() {
         document.getElementById('auth-message').innerText = 'Error during login: ' + err;
     }
 }
-// async function logout() {
-//     try {
-//         const resp = await fetch('/logout', {
-//             method: 'POST',
-//             headers: {'Content-Type': 'application/json'},
-//             credentials: 'include'
-//         });
-//         const data = await resp.json();
-//         if (data.status) {
-//             userTier = 'free';
-//             document.getElementById('landing').style.display = 'flex';
-//             document.getElementById('app').style.display = 'none';
-//             document.getElementById('profile-container').style.display = 'none';
-//             document.getElementById('logout').style.display = 'none';
-//             document.getElementById('auth-message').innerText = 'Logged out successfully!';
-//         } else {
-//             document.getElementById('auth-message').innerText = 'Error during logout';
-//         }
-//     } catch (err) {
-//         document.getElementById('auth-message').innerText = 'Error during logout: ' + err;
-//     }
-// }
-// document.getElementById('profile-icon').addEventListener('click', () => {
-//     const logoutButton = document.getElementById('logout');
-//     logoutButton.style.display = logoutButton.style.display === 'block' ? 'none' : 'block';
-// });
-// document.addEventListener('click', (e) => {
-//     const profileContainer = document.getElementById('profile-container');
-//     const logoutButton = document.getElementById('logout');
-//     if (!profileContainer.contains(e.target) && logoutButton.style.display === 'block') {
-//         logoutButton.style.display = 'none';
-//     }
-// });
 function checkTabAccess(tabName) {
     const accessRules = {
         'Databases': ['free', 'basic', 'standard', 'premium'],
         'Query': ['standard', 'premium'],
         'Manage': ['basic', 'standard', 'premium'],
-        'CreateDB': ['free','basic', 'standard', 'premium'],
+        'CreateDB': ['free', 'basic', 'standard', 'premium'],
         'ConnectDB': ['free', 'basic', 'standard', 'premium'],
         'Visualization': ['premium'],
         'Subscriptions': ['free', 'basic', 'standard', 'premium']
@@ -585,35 +549,66 @@ function openTab(evt, tabName) {
 }
 document.getElementById("connect_db_type").addEventListener("change", function() {
     const type = this.value;
-    document.getElementById("connect_db_path").style.display = type === "sqlite" ? "block" : "none";
+    document.getElementById("connect_db_file").style.display = type === "sqlite" ? "block" : "none";
     ["connect_host", "connect_port", "connect_database", "connect_user", "connect_password"].forEach(id => {
         document.getElementById(id).style.display = type !== "sqlite" ? "block" : "none";
     });
 });
 async function connectDB() {
     const type = document.getElementById("connect_db_type").value;
-    let payload = {db_type: type};
     if (type === "sqlite") {
-        payload.path = document.getElementById("connect_db_path").value;
-        payload.db_name = payload.path.split('/').pop();
+        const fileInput = document.getElementById("connect_db_file");
+        if (!fileInput.files.length) {
+            alert("Please select a .db file");
+            return;
+        }
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+        try {
+            const resp = await fetch("/upload_db", {
+                method: "POST",
+                body: formData,
+                credentials: 'include'
+            });
+            const data = await resp.json();
+            document.getElementById("connect_db_result").innerText = data.error ? data.error : JSON.stringify(data.schema, null, 2);
+            if (!data.error) {
+                alert("Database uploaded successfully!");
+                loadDatabases();
+            }
+        } catch (err) {
+            document.getElementById("connect_db_result").innerText = "Error uploading database: " + err;
+        }
     } else {
-        payload.host = document.getElementById("connect_host").value;
-        payload.port = document.getElementById("connect_port").value;
-        payload.database = document.getElementById("connect_database").value;
-        payload.db_name = payload.database;
-        payload.user = document.getElementById("connect_user").value;
-        payload.password = document.getElementById("connect_password").value;
-    }
-    const resp = await fetch("/connect_db", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(payload), credentials: 'include'});
-    const data = await resp.json();
-    document.getElementById("connect_db_result").innerText = data.error ? data.error : JSON.stringify(data.schema, null, 2);
-    if (!data.error) {
-        alert("Database connected successfully!");
-        loadDatabases();
+        const payload = {
+            db_type: type,
+            host: document.getElementById("connect_host").value,
+            port: document.getElementById("connect_port").value,
+            database: document.getElementById("connect_database").value,
+            db_name: document.getElementById("connect_database").value,
+            user: document.getElementById("connect_user").value,
+            password: document.getElementById("connect_password").value
+        };
+        try {
+            const resp = await fetch("/connect_db", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(payload),
+                credentials: 'include'
+            });
+            const data = await resp.json();
+            document.getElementById("connect_db_result").innerText = data.error ? data.error : JSON.stringify(data.schema, null, 2);
+            if (!data.error) {
+                alert("Database connected successfully!");
+                loadDatabases();
+            }
+        } catch (err) {
+            document.getElementById("connect_db_result").innerText = "Error connecting database: " + err;
+        }
     }
 }
 async function loadDatabases() {
-    const resp = await fetch("/databases", {credentials: 'include'});
+    const resp = await fetch("/public_databases", {credentials: 'include'});
     const data = await resp.json();
     if (data.error) return;
     ["db_select", "db_query_select", "db_manage_select", "viz_db_select"].forEach(id => {
@@ -689,8 +684,9 @@ async function askQuery() {
     div.innerHTML = html;
 }
 async function createDB() {
-    if (!['free','basic', 'standard', 'premium'].includes(userTier)) {
-      return;
+    if (!['free', 'basic', 'standard', 'premium'].includes(userTier)) {
+        showPopup('You are on the ' + userTier + ' tier and cannot access the Create DB feature. Please subscribe to a higher tier.');
+        return;
     }
     const db_name = document.getElementById("new_db_name").value;
     const prompt = document.getElementById("db_prompt").value;
