@@ -1018,9 +1018,5 @@ def stripe_webhook():
 
 # ---------- Start server ----------
 if __name__ == "__main__":
-    create_demo_db()
-    threading.Timer(
-        1.5,
-        lambda: webbrowser.open("http://127.0.0.1:5000/")
-    ).start()
+
     app.run(host="0.0.0.0", port=5000, debug=True)
