@@ -137,31 +137,31 @@
             <button class="submit" onclick="login()">Login</button>
             <p class="error" id="login-error"></p>
             <div class="oauth-buttons">
-                <button class="oauth-button" onclick="window.location.href='/login/google'">
+                <!-- <button class="oauth-button" onclick="window.location.href='/login/google'">
                     <img src="https://www.google.com/favicon.ico" alt="Google">
                     Continue with Google
                 </button>
                 <button class="oauth-button" onclick="window.location.href='/login/github'">
                     <img src="https://github.com/favicon.ico" alt="GitHub">
                     Continue with GitHub
-                </button>
+                </button> -->
             </div>
         </div>
         <div id="signup" class="tabcontent">
-            <input type="text" id="signup-username" placeholder="Username" required>
+            <!-- <input type="text" id="signup-username" placeholder="Username" required> -->
             <input type="email" id="signup-email" placeholder="Email" required>
             <input type="password" id="signup-password" placeholder="Password" required>
             <button class="submit" onclick="signup()">Sign Up</button>
             <p class="error" id="signup-error"></p>
             <div class="oauth-buttons">
-                <button class="oauth-button" onclick="window.location.href='/login/google'">
+                <!-- <button class="oauth-button" onclick="window.location.href='/login/google'">
                     <img src="https://www.google.com/favicon.ico" alt="Google">
                     Continue with Google
                 </button>
                 <button class="oauth-button" onclick="window.location.href='/login/github'">
                     <img src="https://github.com/favicon.ico" alt="GitHub">
                     Continue with GitHub
-                </button>
+                </button> -->
             </div>
         </div>
     </div>
@@ -203,36 +203,48 @@
                 error.style.display = 'block';
             }
         }
+async function signup() {
+    const email = document.getElementById('signup-email').value;
+    const password = document.getElementById('signup-password').value;
+    const error = document.getElementById('signup-error');
 
-        async function signup() {
-            const username = document.getElementById('signup-username').value;
-            const email = document.getElementById('signup-email').value;
-            const password = document.getElementById('signup-password').value;
-            const error = document.getElementById('signup-error');
-            if (!username || !email || !password) {
-                error.textContent = 'Username, email, and password are required';
-                error.style.display = 'block';
-                return;
-            }
-            try {
-                const response = await fetch('/signup', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, email, password }),
-                    credentials: 'include'
-                });
-                const data = await response.json();
-                if (data.error) {
-                    error.textContent = data.error;
-                    error.style.display = 'block';
-                } else {
-                    window.location.href = data.redirect;
-                }
-            } catch (err) {
-                error.textContent = 'An error occurred. Please try again.';
-                error.style.display = 'block';
-            }
+    if (!email || !password) {
+        error.textContent = 'Email and password are required';
+        error.style.display = 'block';
+        return;
+    }
+
+    try {
+        const response = await fetch('/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+            error.textContent = data.error;
+            error.style.display = 'block';
+        } else {
+            // ✅ Show success message before redirect
+            error.style.color = '#66ff66';
+            error.textContent = data.message || 'Signup successful!';
+            error.style.display = 'block';
+
+            // Redirect after 1.5 seconds
+            setTimeout(() => {
+                window.location.href = data.redirect;
+            }, 1500);
         }
+    } catch (err) {
+        error.textContent = 'An error occurred. Please try again.';
+        error.style.display = 'block';
+    }
+}
+
+
     </script>
 </body>
 </html>
