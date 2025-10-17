@@ -46,7 +46,7 @@ DB_FOLDER = "databases"
 os.makedirs(DB_FOLDER, exist_ok=True)
 app = Flask(__name__, static_folder=".", template_folder=".")
 app.secret_key = os.urandom(24)  # Required for sessions
-
+app.config["UPLOAD_FOLDER"] = DB_FOLDER
 # OAuth setup
 oauth = OAuth(app)
 
