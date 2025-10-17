@@ -568,9 +568,11 @@ def list_databases():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-# ---------- DB & Groq Utilities ----------
 def get_db_path(db_name):
-    return os.path.join(DB_FOLDER, db_name)
+    from flask_login import current_user
+    user_folder = os.path.join(app.config["UPLOAD_FOLDER"], str(current_user.id))
+    os.makedirs(user_folder, exist_ok=True)
+    return os.path.join(user_folder, db_name)
 
 def connect_db(db_name):
     """Connect to SQLite database (case-insensitive for text)."""
