@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,68 +6,49 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://js.stripe.com/v3/"></script>
 <style>
-/* Theme Variables */
-body.theme-dark {
-    --bg-gradient: linear-gradient(135deg, #000000, #1a1a1a);
-    --text-primary: #e0e0e0;
-    --text-secondary: #b0b0b0;
-    --text-heading: #ffffff;
-    --bg-secondary: rgba(0,0,0,0.8);
-    --bg-input: rgba(0,0,0,0.7);
-    --bg-faint: rgba(255,255,255,0.05);
-    --border-color: #444444;
-    --button-gradient: linear-gradient(45deg, #1a1a1a, #333333);
-    --tab-inactive: rgba(255,255,255,0.1);
-    --h1-gradient: linear-gradient(to right, #aaaaaa, #dddddd);
-    --card-bg: rgba(0,0,0,0.7);
-    --card-border: rgba(255,255,255,0.1);
-    --card-h3: #cccccc;
-    --card-p: #b0b0b0;
+/* Professional Theme Variables */
+:root {
+    --primary: #4361ee;
+    --primary-dark: #3a56d4;
+    --secondary: #7209b7;
+    --accent: #4cc9f0;
+    --light: #f8f9fa;
+    --dark: #212529;
+    --success: #4bb543;
+    --warning: #ffc107;
+    --danger: #dc3545;
+    --gray: #6c757d;
+    --gray-light: #e9ecef;
+    --border-radius: 8px;
+    --box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    --transition: all 0.3s ease;
 }
-body.theme-light {
-    --bg-gradient: linear-gradient(135deg, #ffffff, #f0f0f0);
-    --text-primary: #333333;
-    --text-secondary: #666666;
-    --text-heading: #000000;
-    --bg-secondary: rgba(255,255,255,0.8);
-    --bg-input: rgba(255,255,255,0.7);
-    --bg-faint: rgba(0,0,0,0.05);
-    --border-color: #cccccc;
-    --button-gradient: linear-gradient(45deg, #e0e0e0, #cccccc);
-    --tab-inactive: rgba(0,0,0,0.1);
-    --h1-gradient: linear-gradient(to right, #333333, #000000);
-    --card-bg: rgba(255,255,255,0.7);
-    --card-border: rgba(0,0,0,0.1);
-    --card-h3: #333333;
-    --card-p: #666666;
-}
+
 body {
     margin: 0;
     padding: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: var(--bg-gradient);
-    background-attachment: fixed;
-    background-repeat: no-repeat;
-    background-size: cover;
-    color: var(--text-primary);
+    background: var(--light);
+    color: var(--dark);
     overflow-x: hidden;
 }
+
 header {
     text-align: center;
     padding: 20px 0;
 }
 header h1 {
     font-size: 2.5rem;
-    background: var(--h1-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--primary);
     margin: 0;
+    font-weight: 700;
 }
 header p {
     font-size: 1.1rem;
-    color: var(--text-secondary);
+    color: var(--gray);
     margin: 5px 0 0;
 }
+
 #landing {
     height: 100vh;
     display: flex;
@@ -77,218 +57,204 @@ header p {
     align-items: center;
     text-align: center;
     transition: opacity 0.5s ease;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: white;
 }
 #landing h1 {
     font-size: 3rem;
-    background: var(--h1-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: white;
     margin-bottom: 20px;
+    font-weight: 700;
 }
 #landing p {
     font-size: 1.2rem;
     margin-bottom: 40px;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.9);
 }
 #landing button {
-    padding: 15px 40px;
-    font-size: 1.2rem;
-    border-radius: 30px;
-    width: 200px;
+    padding: 12px 30px;
+    font-size: 1.1rem;
+    border-radius: var(--border-radius);
     border: none;
     cursor: pointer;
-    background: var(--button-gradient);
-    color: var(--text-heading);
-    transition: transform 0.2s;
+    background: white;
+    color: var(--primary);
+    font-weight: 600;
+    transition: var(--transition);
+    box-shadow: var(--box-shadow);
 }
-#landing button:hover { transform: scale(1.05); }
+#landing button:hover { 
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
 #app {
     display: none;
     padding: 60px 20px 50px 20px;
     max-width: 1200px;
     margin: auto;
 }
+
 .tab {
     display: flex;
     gap: 5px;
     margin-bottom: 20px;
+    flex-wrap: wrap;
 }
 .tab button {
     flex: 1;
     padding: 12px 20px;
-    border-radius: 10px 10px 0 0;
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
     border: none;
-    background: var(--tab-inactive);
-    color: var(--text-primary);
+    background: var(--gray-light);
+    color: var(--gray);
     font-weight: bold;
     cursor: pointer;
     transition: 0.3s;
+    min-width: 120px;
 }
 .tab button.active {
-    background: var(--button-gradient);
-    color: var(--text-heading);
+    background: var(--primary);
+    color: white;
 }
+
 .tabcontent {
     display: none;
     padding: 20px;
-    background: var(--bg-secondary);
-    border-radius: 0 10px 10px 10px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    background: white;
+    border-radius: 0 var(--border-radius) var(--border-radius) var(--border-radius);
+    box-shadow: var(--box-shadow);
     animation: fadeIn 0.5s;
 }
 @keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
+
 h2 {
-    color: var(--text-heading);
+    color: var(--dark);
     margin-bottom: 10px;
 }
+
 select, input, textarea, button {
     width: 100%;
     padding: 12px;
     margin: 8px 0;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    background: var(--bg-input);
-    color: var(--text-primary);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--gray-light);
+    background: white;
+    color: var(--dark);
     font-size: 1rem;
+    transition: var(--transition);
 }
-textarea { resize: vertical; }
+
+textarea { 
+    resize: vertical; 
+    min-height: 100px;
+}
+
 button {
-    background: var(--button-gradient);
-    color: var(--text-heading);
+    background: var(--primary);
+    color: white;
     font-weight: bold;
+    cursor: pointer;
+    border: none;
 }
-button:hover { opacity: 0.9; }
+button:hover { 
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 10px;
+    box-shadow: var(--box-shadow);
+    border-radius: var(--border-radius);
+    overflow: hidden;
 }
 th, td {
-    border: 1px solid var(--border-color);
-    padding: 10px;
+    border: 1px solid var(--gray-light);
+    padding: 12px;
     text-align: left;
 }
 th {
-    background: var(--bg-faint);
+    background: var(--primary);
+    color: white;
+    font-weight: 600;
 }
+
 pre {
-    background: var(--bg-secondary);
+    background: var(--gray-light);
     padding: 15px;
-    border-radius: 8px;
+    border-radius: var(--border-radius);
     overflow-x: auto;
+    font-family: 'Courier New', monospace;
 }
+
 #db_description {
-    background: var(--bg-faint);
+    background: var(--gray-light);
     padding: 12px;
-    border-radius: 8px;
+    border-radius: var(--border-radius);
     margin-bottom: 15px;
+    font-family: 'Courier New', monospace;
 }
+
 #db_prompt, #new_db_name, #add_row_values, #question,
 #connect_db_file, #connect_host, #connect_port,
 #connect_database, #connect_user, #connect_password,
 #viz_prompt {
     width: calc(100% - 25px);
 }
+
 .subscriptions {
     display: flex;
     gap: 16px;
     flex-wrap: wrap;
 }
+
 .card {
-    background: var(--card-bg);
+    background: white;
     padding: 18px;
-    border-radius: 12px;
-    border: 1px solid var(--card-border);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--gray-light);
     width: 260px;
+    box-shadow: var(--box-shadow);
 }
-.card h3 { margin: 0 0 8px 0; color: var(--card-h3); }
-.card p { color: var(--card-p); margin: 0 0 12px 0; }
-.card button { width: 100%; }
-#theme-toggle {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    z-index: 1000;
-    padding: 8px;
-    border-radius: 50%;
-    background: var(--button-gradient);
-    color: var(--text-heading);
-    border: none;
-    cursor: pointer;
-    font-size: 1.5rem;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.card h3 { 
+    margin: 0 0 8px 0; 
+    color: var(--dark); 
 }
-#auth-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
+.card p { 
+    color: var(--gray); 
+    margin: 0 0 12px 0; 
 }
-#auth-section input {
-    width: 300px;
+.card button { 
+    width: 100%; 
 }
-#auth-message {
-    color: var(--text-secondary);
-    margin-top: 10px;
-}
-#profile-container {
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    z-index: 1000;
-}
-#profile-icon {
-    padding: 8px;
-    border-radius: 50%;
-    background: var(--button-gradient);
-    color: var(--text-heading);
-    border: none;
-    cursor: pointer;
-    font-size: 1.5rem;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-#logout {
-    display: none;
-    position: absolute;
-    top: 50px;
-    left: 0;
-    padding: 8px 16px;
-    border-radius: 8px;
-    background: var(--button-gradient);
-    color: var(--text-heading);
-    border: none;
-    cursor: pointer;
-    font-size: 1rem;
-}
+
 #popup {
     display: none;
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: var(--card-bg);
+    background: white;
     padding: 20px;
-    border-radius: 12px;
-    border: 1px solid var(--card-border);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--gray-light);
     z-index: 2000;
     text-align: center;
     max-width: 400px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
 #popup p {
-    color: var(--card-p);
+    color: var(--gray);
     margin-bottom: 20px;
 }
 #popup button {
     padding: 10px 20px;
+    margin: 0 5px;
 }
+
 #overlay {
     display: none;
     position: fixed;
@@ -299,36 +265,43 @@ pre {
     background: rgba(0, 0, 0, 0.5);
     z-index: 1500;
 }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .tab button {
+        min-width: 100px;
+        font-size: 0.9rem;
+        padding: 10px 15px;
+    }
+    
+    .card {
+        width: 100%;
+    }
+}
 </style>
 </head>
-<body class="theme-dark">
-<button id="theme-toggle">☀️</button>
-<!-- <div id="profile-container">
-    <button id="profile-icon">👤</button>
-    <button id="logout">Logout</button>
-</div> -->
+<body>
+<button id="theme-toggle" style="display:none;">☀️</button>
+
 <div id="overlay"></div>
 <div id="popup">
     <p id="popup-message"></p>
     <button onclick="goToSubscriptions()">Subscribe Now</button>
     <button onclick="closePopup()">Close</button>
 </div>
+
 <div id="landing">
     <h1>Welcome to SQL Nurse</h1>
-    <!-- <p>Interact with your databases, generate SQL, manage tables, and visualize data, all in one powerful interface.</p> -->
-    <!-- <div id="auth-section">
-        <input type="email" id="email" placeholder="Email">
-        <input type="password" id="password" placeholder="Password">
-        <button onclick="signup()">Sign Up</button>
-        <button onclick="login()">Log In</button>
-        <p id="auth-message"></p>
-    </div> -->
+    <p>Interact with your databases, generate SQL, manage tables, and visualize data, all in one powerful interface.</p>
+    <button onclick="showApp()">Get Started</button>
 </div> 
+
 <div id="app">
     <header>
         <h1>SQL Nurse</h1>
         <p>Your Database Management and Visualization Tool</p>
     </header>
+    
     <div class="tab">
         <button class="tablinks" onclick="checkTabAccess('Databases')">Databases</button>
         <button class="tablinks" onclick="checkTabAccess('Query')">Query</button>
@@ -338,6 +311,7 @@ pre {
         <button class="tablinks" onclick="checkTabAccess('Visualization')">Visualization</button>
         <button class="tablinks" onclick="openTab(event,'Subscriptions')">Subscriptions</button>
     </div>
+    
     <div id="Databases" class="tabcontent">
         <p>
             If you want to make a demo, you can download the sample database file 
@@ -351,6 +325,7 @@ pre {
         <button onclick="loadSchema()">Load Schema</button>
         <pre id="schema_view"></pre>
     </div>
+    
     <div id="Query" class="tabcontent">
         <h2>Ask a Question</h2>
         <select id="db_query_select" onchange="loadDBDescription()"></select>
@@ -364,6 +339,7 @@ pre {
         <h3>Results:</h3>
         <div id="results"></div>
     </div>
+    
     <div id="Manage" class="tabcontent">
         <h2>Manage Table Rows</h2>
         <select id="db_manage_select" onchange="loadTables()"></select>
@@ -372,6 +348,7 @@ pre {
         <button onclick="addRow()">Add Row</button>
         <div id="table_editor"></div>
     </div>
+    
     <div id="CreateDB" class="tabcontent">
         <h2>Create New Database</h2>
         <input type="text" id="new_db_name" placeholder="Database name">
@@ -379,6 +356,7 @@ pre {
         <button onclick="createDB()">Create Database</button>
         <pre id="create_db_result"></pre>
     </div>
+    
     <div id="ConnectDB" class="tabcontent">
         <h2>Connect Your Database</h2>
         <select id="connect_db_type">
@@ -395,6 +373,7 @@ pre {
         <button onclick="connectDB()">Connect</button>
         <pre id="connect_db_result"></pre>
     </div>
+    
     <div id="Visualization" class="tabcontent">
         <h2>Data Visualization</h2>
         <select id="viz_db_select"></select>
@@ -407,15 +386,19 @@ pre {
         <h3>Summary:</h3>
         <p id="viz_summary"></p>
     </div>
+    
     <div id="Subscriptions" class="tabcontent">
         <h2>Choose a Plan</h2>
         <div id="subs_info">Loading plans...</div>
         <div class="subscriptions" id="subscriptions_container"></div>
-        <p style="margin-top:14px;color:var(--text-secondary);">All plans are monthly recurring. Billing handled by Stripe (test mode).</p>
+        <p style="margin-top:14px;color:var(--gray);">All plans are monthly recurring. Billing handled by Stripe (test mode).</p>
     </div>
 </div>
+
 <script>
 let userTier = 'free';
+let vizChart;
+
 async function checkLogin() {
     try {
         const resp = await fetch("/user_info", {credentials: 'include'});
@@ -423,79 +406,26 @@ async function checkLogin() {
         if (data.error) {
             document.getElementById('landing').style.display = 'flex';
             document.getElementById('app').style.display = 'none';
-            // document.getElementById('profile-container').style.display = 'none';
-            // document.getElementById('logout').style.display = 'none';
         } else {
             userTier = data.tier;
             document.getElementById('landing').style.display = 'none';
             document.getElementById('app').style.display = 'block';
-            // document.getElementById('profile-container').style.display = 'block';
             loadDatabases();
             document.querySelectorAll('.tablinks')[0].click();
         }
     } catch (err) {
-        document.getElementById('auth-message').innerText = 'Error checking login status: ' + err;
+        console.log('Error checking login status: ' + err);
     }
 }
+
 checkLogin();
-async function signup() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    if (!email || !password) {
-        document.getElementById('auth-message').innerText = 'Please enter both email and password';
-        return;
-    }
-    try {
-        const resp = await fetch('/signup', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({email, password}),
-            credentials: 'include'
-        });
-        const data = await resp.json();
-        document.getElementById('auth-message').innerText = data.error ? data.error : 'Signed up successfully!';
-        if (!data.error) {
-            userTier = data.tier;
-            document.getElementById('landing').style.display = 'none';
-            document.getElementById('app').style.display = 'block';
-            // document.getElementById('profile-container').style.display = 'block';
-            // document.getElementById('logout').style.display = 'none';
-            loadDatabases();
-            document.querySelectorAll('.tablinks')[0].click();
-        }
-    } catch (err) {
-        document.getElementById('auth-message').innerText = 'Error during signup: ' + err;
-    }
+
+function showApp() {
+    document.getElementById('landing').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    checkTabAccess('Databases');
 }
-async function login() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    if (!email || !password) {
-        document.getElementById('auth-message').innerText = 'Please enter both email and password';
-        return;
-    }
-    try {
-        const resp = await fetch('/login', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({email, password}),
-            credentials: 'include'
-        });
-        const data = await resp.json();
-        document.getElementById('auth-message').innerText = data.error ? data.error : 'Logged in successfully!';
-        if (!data.error) {
-            userTier = data.tier;
-            document.getElementById('landing').style.display = 'none';
-            document.getElementById('app').style.display = 'block';
-            // document.getElementById('profile-container').style.display = 'block';
-            // document.getElementById('logout').style.display = 'none';
-            loadDatabases();
-            document.querySelectorAll('.tablinks')[0].click();
-        }
-    } catch (err) {
-        document.getElementById('auth-message').innerText = 'Error during login: ' + err;
-    }
-}
+
 function checkTabAccess(tabName) {
     const accessRules = {
         'Databases': ['free', 'basic', 'standard', 'premium'],
@@ -506,41 +436,31 @@ function checkTabAccess(tabName) {
         'Visualization': ['premium'],
         'Subscriptions': ['free', 'basic', 'standard', 'premium']
     };
+    
     if (!accessRules[tabName].includes(userTier)) {
         showPopup(`You are on the ${userTier} tier and cannot access the ${tabName} feature. Please subscribe to a higher tier.`);
         return;
     }
+    
     openTab({currentTarget: document.querySelector(`button[onclick*="${tabName}"]`)}, tabName);
 }
+
 function showPopup(message) {
     document.getElementById('popup-message').innerText = message;
     document.getElementById('popup').style.display = 'block';
     document.getElementById('overlay').style.display = 'block';
 }
+
 function closePopup() {
     document.getElementById('popup').style.display = 'none';
     document.getElementById('overlay').style.display = 'none';
 }
+
 function goToSubscriptions() {
     closePopup();
     openTab({currentTarget: document.querySelector(`button[onclick*='Subscriptions']`)}, 'Subscriptions');
 }
-document.getElementById('theme-toggle').addEventListener('click', () => {
-    if (document.body.classList.contains('theme-dark')) {
-        document.body.classList.remove('theme-dark');
-        document.body.classList.add('theme-light');
-        document.getElementById('theme-toggle').innerHTML = '🌙';
-    } else {
-        document.body.classList.remove('theme-light');
-        document.body.classList.add('theme-dark');
-        document.getElementById('theme-toggle').innerHTML = '☀️';
-    }
-});
-function showApp() {
-    document.getElementById('landing').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    checkTabAccess('Databases');
-}
+
 function openTab(evt, tabName) {
     var i, tabcontent = document.getElementsByClassName("tabcontent"), tablinks = document.getElementsByClassName("tablinks");
     for (i = 0; i < tabcontent.length; i++) tabcontent[i].style.display = "none";
@@ -548,6 +468,8 @@ function openTab(evt, tabName) {
     document.getElementById(tabName).style.display = "block";
     evt.currentTarget.className += " active";
 }
+
+// Database functionality
 document.getElementById("connect_db_type").addEventListener("change", function() {
     const type = this.value;
     document.getElementById("connect_db_file").style.display = type === "sqlite" ? "block" : "none";
@@ -555,6 +477,7 @@ document.getElementById("connect_db_type").addEventListener("change", function()
         document.getElementById(id).style.display = type !== "sqlite" ? "block" : "none";
     });
 });
+
 async function connectDB() {
     const type = document.getElementById("connect_db_type").value;
     if (type === "sqlite") {
@@ -608,6 +531,7 @@ async function connectDB() {
         }
     }
 }
+
 async function loadDatabases() {
     const resp = await fetch("/public_databases", {credentials: 'include'});
     const data = await resp.json();
@@ -624,12 +548,14 @@ async function loadDatabases() {
     });
     loadTables();
 }
+
 async function loadSchema() {
     const db = document.getElementById("db_select").value;
     const resp = await fetch("/schema", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name: db}), credentials: 'include'});
     const data = await resp.json();
     document.getElementById("schema_view").innerText = data.error ? data.error : JSON.stringify(data.schema, null, 2);
 }
+
 async function loadDBDescription() {
     const db = document.getElementById("db_query_select").value;
     if (!db) return;
@@ -654,6 +580,7 @@ async function loadDBDescription() {
         sug_div.appendChild(btn);
     });
 }
+
 async function askQuery() {
     if (!['standard', 'premium'].includes(userTier)) {
         showPopup('You are on the ' + userTier + ' tier and cannot access the Query feature. Please subscribe to a higher tier.');
@@ -684,6 +611,7 @@ async function askQuery() {
     html += "</tbody></table>";
     div.innerHTML = html;
 }
+
 async function createDB() {
     if (!['free', 'basic', 'standard', 'premium'].includes(userTier)) {
         showPopup('You are on the ' + userTier + ' tier and cannot access the Create DB feature. Please subscribe to a higher tier.');
@@ -700,6 +628,7 @@ async function createDB() {
     document.getElementById("create_db_result").innerText = data.error ? data.error : "Database Created!\n" + data.sql_schema;
     loadDatabases();
 }
+
 async function loadTables() {
     const db = document.getElementById("db_manage_select").value;
     const resp = await fetch("/schema", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name: db}), credentials: 'include'});
@@ -718,6 +647,7 @@ async function loadTables() {
     updateRowPlaceholder();
     loadTableRows();
 }
+
 function updateRowPlaceholder() {
     const db = document.getElementById("db_manage_select").value;
     const table = document.getElementById("table_select").value;
@@ -736,6 +666,7 @@ function updateRowPlaceholder() {
         }
     });
 }
+
 async function loadTableRows() {
     if (!['basic', 'standard', 'premium'].includes(userTier)) {
         showPopup('You are on the ' + userTier + ' tier and cannot access the Manage Rows feature. Please subscribe to a higher tier.');
@@ -768,6 +699,7 @@ async function loadTableRows() {
     html += "</tbody></table>";
     div.innerHTML = html;
 }
+
 async function addRow() {
     if (!['basic', 'standard', 'premium'].includes(userTier)) {
         showPopup('You are on the ' + userTier + ' tier and cannot access the Manage Rows feature. Please subscribe to a higher tier.');
@@ -785,6 +717,7 @@ async function addRow() {
     alert("Row added!");
     loadTableRows();
 }
+
 async function deleteRow(db, table, condition) {
     if (!['basic', 'standard', 'premium'].includes(userTier)) {
         showPopup('You are on the ' + userTier + ' tier and cannot access the Manage Rows feature. Please subscribe to a higher tier.');
@@ -799,7 +732,7 @@ async function deleteRow(db, table, condition) {
     alert("Row deleted!");
     loadTableRows();
 }
-let vizChart;
+
 async function generateVisualization() {
     if (userTier !== 'premium') {
         showPopup('You are on the ' + userTier + ' tier and cannot access the Visualization feature. Please subscribe to the Premium tier.');
@@ -832,7 +765,7 @@ async function generateVisualization() {
     }
     const labels = rows.map(r => r[cols[0]]);
     const values = rows.map(r => Number(r[cols[1]]) || 0);
-    const isLight = document.body.classList.contains('theme-light');
+    
     if (vizChart) vizChart.destroy();
     const ctx = document.getElementById("viz_chart").getContext("2d");
     vizChart = new Chart(ctx, {
@@ -842,25 +775,41 @@ async function generateVisualization() {
             datasets: [{
                 label: cols[1],
                 data: values,
-                backgroundColor: isLight ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)',
-                borderColor: isLight ? 'rgba(0, 0, 0, 0.5)' : 'rgba(255, 255, 255, 0.5)',
+                backgroundColor: [
+                    'rgba(67, 97, 238, 0.7)',
+                    'rgba(114, 9, 183, 0.7)',
+                    'rgba(76, 201, 240, 0.7)',
+                    'rgba(75, 181, 67, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(67, 97, 238, 1)',
+                    'rgba(114, 9, 183, 1)',
+                    'rgba(76, 201, 240, 1)',
+                    'rgba(75, 181, 67, 1)'
+                ],
                 borderWidth: 1
             }]
         },
         options: {
             responsive: true,
             plugins: {
-                legend: { display: true, labels: {color: isLight ? '#333333' : '#e0e0e0'} },
-                title: { display: true, text: prompt, color: isLight ? '#333333' : '#e0e0e0', font: {size: 18} }
+                legend: { display: true },
+                title: { 
+                    display: true, 
+                    text: prompt,
+                    font: {size: 18}
+                }
             },
             scales: {
-                x: { ticks: {color: isLight ? '#333333' : '#e0e0e0'} },
-                y: { ticks: {color: isLight ? '#333333' : '#e0e0e0'}, beginAtZero: true }
+                y: { beginAtZero: true }
             }
         }
     });
 }
+
+// Stripe functionality
 let stripePublishableKey = "";
+
 async function loadStripeConfig() {
     try {
         const r = await fetch("/stripe_config", {credentials: 'include'});
@@ -889,7 +838,9 @@ async function loadStripeConfig() {
         document.getElementById("subs_info").innerText = "Failed to load Stripe config: " + err;
     }
 }
+
 loadStripeConfig();
+
 async function startCheckout(plan) {
     try {
         const resp = await fetch("/create-checkout-session", {
