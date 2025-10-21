@@ -677,7 +677,7 @@ footer {
             <a href="#how-it-works">How It Works</a>
             <a href="#pricing">Pricing</a>
             <a href="#faq">FAQ</a>
-            <a href="#" class="nav-button" id="nav-login">Login</a>
+            <a href="/auth" class="nav-button" id="nav-login">Login</a>
         </div>
     </nav>
 
@@ -763,7 +763,10 @@ footer {
                     <li>Limited Visualizations</li>
                     <li>Community Support</li>
                 </ul>
-                <button class="btn btn-outline btn-small" onclick="showAuthModal('signup')">Get Started</button>
+                <button class="btn btn-outline btn-small" onclick="window.location.href='/app'">
+  Get Started
+</button>
+
             </div>
             <div class="pricing-card featured">
                 <h3>Standard</h3>
