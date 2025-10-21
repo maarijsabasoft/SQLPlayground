@@ -333,8 +333,7 @@ def login():
             return jsonify({"error": "Invalid credentials"}), 401
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-
-@app.route("/google-login")
+@app.route("/google-login", methods=["GET"])
 def google_login():
     callback_url = url_for('google_auth_callback', _external=True)
     nonce = secrets.token_urlsafe(16)
@@ -345,87 +344,42 @@ def google_login():
     except Exception as e:
         logger.error(f"Google login initiation failed: {str(e)}")
         flash(f"Google login initiation failed: {str(e)}", "error")
-        return redirect(url_for("auth"))
+        return redirect(url_for("auth_page"))
 
-import jwt
-
-@app.route("/auth/google/callback")
+@app.route("/auth/google/callback", methods=["GET", "POST"])
 def google_auth_callback():
     try:
         logger.debug(f"Received Google OAuth callback with request URL: {request.url}")
-        # Step 1: Authorize access token
-        try:
-            token = google.authorize_access_token()
-            logger.debug(f"Access token obtained: {json.dumps({k: v for k, v in token.items() if k != 'access_token'}, indent=2)}")
-            decoded_token = jwt.decode(token['id_token'], options={'verify_signature': False})
-            logger.debug(f"Decoded ID token: {json.dumps(decoded_token, indent=2)}")
-        except AuthlibBaseError as token_error:
-            logger.error(f"Failed to obtain access token: {str(token_error)}")
-            flash(f"Google login failed: {str(token_error)}", "error")
-            return redirect(url_for("auth"))
-
-        # Step 2: Get user info
-        user_info = None
+        token = google.authorize_access_token()
+        logger.debug(f"Access token obtained: {json.dumps({k: v for k, v in token.items() if k != 'access_token'}, indent=2)}")
         nonce = session.pop('google_nonce', None)
-        try:
-            user_info = google.parse_id_token(token, nonce=nonce)
-            logger.debug(f"User info from ID token: {user_info}")
-            valid_issuers = ['https://accounts.google.com', 'accounts.google.com']
-            if user_info.get('iss') not in valid_issuers:
-                logger.error(f"Invalid issuer in ID token: {user_info.get('iss')}")
-                flash("Google login failed: Invalid issuer in ID token.", "error")
-                return redirect(url_for("login"))
-        except Exception as id_token_error:
-            logger.warning(f"ID token parsing failed: {str(id_token_error)}")
-            try:
-                resp = google.get("userinfo")
-                if resp.status_code != 200:
-                    logger.error(f"Userinfo endpoint failed with status {resp.status_code}: {resp.text}")
-                    flash(f"Google login failed: Unable to retrieve user info (status {resp.status_code}).", "error")
-                    return redirect(url_for("login"))
-                user_info = resp.json()
-                logger.debug(f"User info from userinfo endpoint: {user_info}")
-            except Exception as userinfo_error:
-                logger.error(f"Userinfo endpoint failed: {str(userinfo_error)}")
-                flash("Google login failed: Unable to retrieve user info.", "error")
-                return redirect(url_for("login"))
-
-        # Step 3: Validate user info
-        if not user_info or not user_info.get("email"):
-            logger.error(f"Invalid or missing user info: {user_info}")
-            flash("Google login failed: Missing email information.", "error")
-            return redirect(url_for("login"))
-
+        user_info = google.parse_id_token(token, nonce=nonce)
         email = user_info.get("email")
-        username = user_info.get("name", email.split("@")[0])
-
-        # Step 4: Check or create user
-        user = User.query.filter_by(email=email).first()
-        if not user:
-            try:
-                user = User(username=username, email=email, auth_provider="google")
-                db.session.add(user)
-                db.session.commit()
-                logger.debug(f"Created new user: {email}")
-            except Exception as db_error:
-                logger.error(f"Database error while creating user: {str(db_error)}")
-                flash("Google login failed: Database error.", "error")
-                return redirect(url_for("login"))
-
-        # Step 5: Log in user
-        login_user(user)
+        if not email:
+            logger.error("No email in user info")
+            flash("Google login failed: Missing email information.", "error")
+            return redirect(url_for("auth_page"))
+        with sqlite3.connect(USER_DB) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id, email, subscription_tier FROM users WHERE email = ?", (email,))
+            user = cursor.fetchone()
+            if not user:
+                cursor.execute(
+                    "INSERT INTO users (email, password, subscription_tier) VALUES (?, ?, ?)",
+                    (email, "", "free")  # No password for OAuth users
+                )
+                conn.commit()
+                user_id = cursor.lastrowid
+                user = (user_id, email, "free")
+            login_user(User(user[0], user[1], user[2]))
         flash("Logged in successfully via Google!", "success")
-        logger.debug("Google login successful, redirecting to index")
-        return redirect(url_for("index"))
-
+        return redirect(url_for("app_page"))
     except Exception as e:
         logger.error(f"Google login failed: {str(e)}")
-        import traceback
-        logger.error(traceback.format_exc())
         flash(f"Google login failed: {str(e)}", "error")
-        return redirect(url_for("login"))
+        return redirect(url_for("auth_page"))
 
-@app.route("/github-login")
+@app.route("/github-login", methods=["GET"])
 def github_login():
     callback_url = url_for('github_auth_callback', _external=True)
     logger.debug(f"Initiating GitHub login with callback: {callback_url}")
@@ -434,74 +388,51 @@ def github_login():
     except Exception as e:
         logger.error(f"GitHub login initiation failed: {str(e)}")
         flash(f"GitHub login initiation failed: {str(e)}", "error")
-        return redirect(url_for("login"))
+        return redirect(url_for("auth_page"))
 
-@app.route("/auth/github/callback")
+@app.route("/auth/github/callback", methods=["GET", "POST"])
 def github_auth_callback():
     try:
         logger.debug(f"Received GitHub OAuth callback with request URL: {request.url}")
-        # Step 1: Authorize access token
-        try:
-            token = github.authorize_access_token()
-            logger.debug(f"Access token obtained: {json.dumps({k: v for k, v in token.items() if k != 'access_token'}, indent=2)}")
-        except AuthlibBaseError as token_error:
-            logger.error(f"Failed to obtain access token: {str(token_error)}")
-            flash(f"GitHub login failed: {str(token_error)}", "error")
-            return redirect(url_for("login"))
-
-        # Step 2: Get user info
+        token = github.authorize_access_token()
         resp = github.get('user', token=token)
         if resp.status_code != 200:
             logger.error(f"Failed to retrieve user info: {resp.status_code} {resp.text}")
-            flash(f"GitHub login failed: Unable to retrieve user info (status {resp.status_code}).", "error")
-            return redirect(url_for("login"))
+            flash(f"GitHub login failed: Unable to retrieve user info.", "error")
+            return redirect(url_for("auth_page"))
         user_info = resp.json()
-        logger.debug(f"GitHub user info: {user_info}")
-
-        # Step 3: Get email
         email = user_info.get('email')
         if not email:
-            try:
-                resp_emails = github.get('user/emails', token=token)
-                if resp_emails.status_code != 200:
-                    logger.error(f"Failed to retrieve emails: {resp_emails.status_code} {resp_emails.text}")
-                    flash(f"GitHub login failed: Unable to retrieve email (status {resp_emails.status_code}).", "error")
-                    return redirect(url_for("login"))
-                emails = resp_emails.json()
-                email = next((e['email'] for e in emails if e['primary'] and e['verified']), user_info['login'] + '@github.com')
-                logger.debug(f"Retrieved email from emails endpoint: {email}")
-            except Exception as email_error:
-                logger.error(f"Failed to retrieve email: {str(email_error)}")
-                flash("GitHub login failed: Unable to retrieve email.", "error")
-                return redirect(url_for("login"))
-
-        username = user_info.get('login', email.split('@')[0])
-
-        # Step 4: Check or create user
-        user = User.query.filter_by(email=email).first()
-        if not user:
-            try:
-                user = User(username=username, email=email, auth_provider='github')
-                db.session.add(user)
-                db.session.commit()
-                logger.debug(f"Created new user: {email}")
-            except Exception as db_error:
-                logger.error(f"Database error while creating user: {str(db_error)}")
-                flash("GitHub login failed: Database error.", "error")
-                return redirect(url_for("login"))
-
-        # Step 5: Log in user
-        login_user(user)
+            resp_emails = github.get('user/emails', token=token)
+            if resp_emails.status_code != 200:
+                logger.error(f"Failed to retrieve emails: {resp_emails.status_code} {resp_emails.text}")
+                flash(f"GitHub login failed: Unable to retrieve email.", "error")
+                return redirect(url_for("auth_page"))
+            emails = resp_emails.json()
+            email = next((e['email'] for e in emails if e['primary'] and e['verified']), None)
+            if not email:
+                logger.error("No verified primary email found")
+                flash("GitHub login failed: No verified email.", "error")
+                return redirect(url_for("auth_page"))
+        with sqlite3.connect(USER_DB) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id, email, subscription_tier FROM users WHERE email = ?", (email,))
+            user = cursor.fetchone()
+            if not user:
+                cursor.execute(
+                    "INSERT INTO users (email, password, subscription_tier) VALUES (?, ?, ?)",
+                    (email, "", "free")
+                )
+                conn.commit()
+                user_id = cursor.lastrowid
+                user = (user_id, email, "free")
+            login_user(User(user[0], user[1], user[2]))
         flash("Logged in successfully via GitHub!", "success")
-        logger.debug("GitHub login successful, redirecting to index")
-        return redirect(url_for("index"))
-
+        return redirect(url_for("app_page"))
     except Exception as e:
         logger.error(f"GitHub login failed: {str(e)}")
-        import traceback
-        logger.error(traceback.format_exc())
         flash(f"GitHub login failed: {str(e)}", "error")
-        return redirect(url_for("login"))
+        return redirect(url_for("auth_page"))
 
 @app.route("/logout", methods=["POST"])
 @login_required
