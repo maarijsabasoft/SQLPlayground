@@ -19,7 +19,8 @@
     --danger: #dc3545;
     --gray: #6c757d;
     --gray-light: #e9ecef;
-    --border-radius: 8px;
+    border-radius: 8px;
+
     --box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     --transition: all 0.3s ease;
 }
