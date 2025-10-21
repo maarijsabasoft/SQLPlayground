@@ -331,7 +331,7 @@ def login():
                 return jsonify({
                     "status": "Logged in",
                     "tier": user[3],
-                    "redirect": "/app"
+                    "redirect": "/tool"
                 })
             return jsonify({"error": "Invalid credentials"}), 401
     except Exception as e:
