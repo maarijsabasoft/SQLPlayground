@@ -53,8 +53,8 @@ oauth = OAuth(app)
 # Google OAuth configuration
 google = oauth.register(
     name='google',
-    client_id='836571438073-g4foa0u929gskfrqhbi7q7omrl7pif2t.apps.googleusercontent.com',
-    client_secret='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',
+    client_id='836571438073-09ml50l2hccddj99mbsqc2dtbg3h8l6b.apps.googleusercontent.com',
+    client_secret='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',
     server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
     client_kwargs={'scope': 'openid email profile'}
 )
