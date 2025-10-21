@@ -275,7 +275,7 @@ def auth_page():
     return render_template("auth.html")
 
 @app.route("/app")
-@login_required
+# @login_required
 def app_page():
     return render_template("index.html")
 
