@@ -895,12 +895,12 @@ footer {
             <button class="btn btn-primary" onclick="login()">Login</button>
             <p class="auth-error" id="login-error"></p>
             <div class="oauth-buttons">
-                <a href="/auth/google" class="oauth-btn">
-                    <img src="https://www.google.com/favicon.ico" alt="Google logo"> Login with Google
-                </a>
-                <a href="/auth/github" class="oauth-btn">
-                    <img src="https://github.githubassets.com/favicons/favicon.png" alt="GitHub logo"> Login with GitHub
-                </a>
+                <a href="{{ url_for('google_login') }}" class="oauth-btn google" aria-label="Login with Google">
+        <img src="https://www.google.com/favicon.ico" alt="Google logo"> Login with Google
+      </a>
+      <a href="{{ url_for('github_login') }}" class="oauth-btn github" aria-label="Login with GitHub">
+        <img src="https://github.githubassets.com/favicons/favicon.png" alt="GitHub logo"> Login with GitHub
+      </a>
             </div>
         </div>
         
@@ -910,12 +910,12 @@ footer {
             <button class="btn btn-primary" onclick="signup()">Sign Up</button>
             <p class="auth-error" id="signup-error"></p>
             <div class="oauth-buttons">
-                <a href="/auth/google" class="oauth-btn">
-                    <img src="https://www.google.com/favicon.ico" alt="Google logo"> Sign up with Google
-                </a>
-                <a href="/auth/github" class="oauth-btn">
-                    <img src="https://github.githubassets.com/favicons/favicon.png" alt="GitHub logo"> Sign up with GitHub
-                </a>
+                               <a href="{{ url_for('google_login') }}" class="oauth-btn google" aria-label="Login with Google">
+        <img src="https://www.google.com/favicon.ico" alt="Google logo"> Login with Google
+      </a>
+      <a href="{{ url_for('github_login') }}" class="oauth-btn github" aria-label="Login with GitHub">
+        <img src="https://github.githubassets.com/favicons/favicon.png" alt="GitHub logo"> Login with GitHub
+      </a>
             </div>
         </div>
     </div>
@@ -1019,30 +1019,69 @@ async function signup() {
         error.style.display = 'block';
         return;
     }
+        async function login() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const error = document.getElementById('login-error');
+            if (!email || !password) {
+                error.textContent = 'Email and password are required';
+                error.style.display = 'block';
+                return;
+            }
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password }),
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                if (data.error) {
+                    error.textContent = data.error;
+                    error.style.display = 'block';
+                } else {
+                    window.location.href = data.redirect;
+                }
+            } catch (err) {
+                error.textContent = 'An error occurred. Please try again.';
+                error.style.display = 'block';
+            }
+        }
+async function signup() {
+    const email = document.getElementById('signup-email').value;
+    const password = document.getElementById('signup-password').value;
+    const error = document.getElementById('signup-error');
 
-    try {
-        // Redirect to auth endpoint
-        window.location.href = `/auth/signup?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
-    } catch (err) {
-        error.textContent = 'An error occurred. Please try again.';
-        error.style.display = 'block';
-    }
-}
-
-async function login() {
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-    const error = document.getElementById('login-error');
-    
     if (!email || !password) {
         error.textContent = 'Email and password are required';
         error.style.display = 'block';
         return;
     }
-    
+
     try {
-        // Redirect to auth endpoint
-        window.location.href = `/auth/login?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
+        const response = await fetch('/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+            error.textContent = data.error;
+            error.style.display = 'block';
+        } else {
+            // ✅ Show success message before redirect
+            error.style.color = '#66ff66';
+            error.textContent = data.message || 'Signup successful!';
+            error.style.display = 'block';
+
+            // Redirect after 1.5 seconds
+            setTimeout(() => {
+                window.location.href = data.redirect;
+            }, 1500);
+        }
     } catch (err) {
         error.textContent = 'An error occurred. Please try again.';
         error.style.display = 'block';
