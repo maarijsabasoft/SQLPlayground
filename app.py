@@ -448,8 +448,8 @@ def user_info():
 
 @app.route("/public_databases", methods=["GET"])
 def public_databases():
-    """List all databases including public ones like demo.db with a placeholder option"""
-    public_dbs = [""]
+    """List all databases excluding demo.db"""
+    public_dbs = []  # No public databases
     try:
         if current_user.is_authenticated:
             with sqlite3.connect(USER_DB) as conn:
@@ -468,18 +468,16 @@ def public_databases():
 @login_required
 def download_db(db_name):
     """Allow downloading a .db file"""
+    if db_name == "":
+        return jsonify({"error": "Cannot download demo.db"}), 403
     try:
-        is_public = db_name == ""
-        if not is_public:
-            with sqlite3.connect(USER_DB) as conn:
-                cursor = conn.cursor()
-                cursor.execute("SELECT db_path FROM user_dbs WHERE user_id = ? AND db_name = ?", (current_user.id, db_name))
-                db_info = cursor.fetchone()
-                if not db_info:
-                    return jsonify({"error": "Database not found or not owned by user"}), 403
-                db_path = db_info[0]
-        else:
-            db_path = get_db_path(db_name)
+        with sqlite3.connect(USER_DB) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT db_path FROM user_dbs WHERE user_id = ? AND db_name = ?", (current_user.id, db_name))
+            db_info = cursor.fetchone()
+            if not db_info:
+                return jsonify({"error": "Database not found or not owned by user"}), 403
+            db_path = db_info[0]
         if not os.path.exists(db_path):
             return jsonify({"error": "Database file not found"}), 404
         return send_file(db_path, as_attachment=True, download_name=db_name)
@@ -500,7 +498,6 @@ def list_databases():
         return jsonify({"error": str(e)}), 400
 
 def get_db_path(db_name):
-    from flask_login import current_user
     user_folder = os.path.join(app.config["UPLOAD_FOLDER"], str(current_user.id))
     os.makedirs(user_folder, exist_ok=True)
     return os.path.join(user_folder, db_name)
@@ -599,7 +596,7 @@ def get_connection(db_type, **kwargs):
     elif db_type.lower() == "postgresql":
         conn = psycopg2.connect(
             host=kwargs.get("host"),
-            port=int(kwargs.get("port", 432)),
+            port=int(kwargs.get("port", 5432)),
             user=kwargs.get("user"),
             password=kwargs.get("password"),
             dbname=kwargs.get("database")
@@ -643,23 +640,18 @@ def get_schema(conn, db_type):
 def schema():
     data = request.json
     db_name = data.get("db_name")
-    if db_name == "Select a database":
+    if db_name == "Select a database" or db_name == "":
         return jsonify({"error": "Please select a valid database"}), 400
     try:
-        is_public = db_name == ""
-        if not is_public:
-            if not current_user.is_authenticated:
-                return jsonify({"error": "Login required for this database"}), 401
-            with sqlite3.connect(USER_DB) as conn:
-                cursor = conn.cursor()
-                cursor.execute("SELECT db_type, db_path FROM user_dbs WHERE user_id = ? AND db_name = ?", (current_user.id, db_name))
-                db_info = cursor.fetchone()
-                if not db_info:
-                    return jsonify({"error": "Database not found or not owned by user"}), 403
-                db_type, db_path = db_info
-        else:
-            db_type = "sqlite"
-            db_path = get_db_path(db_name)
+        if not current_user.is_authenticated:
+            return jsonify({"error": "Login required for this database"}), 401
+        with sqlite3.connect(USER_DB) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT db_type, db_path FROM user_dbs WHERE user_id = ? AND db_name = ?", (current_user.id, db_name))
+            db_info = cursor.fetchone()
+            if not db_info:
+                return jsonify({"error": "Database not found or not owned by user"}), 403
+            db_type, db_path = db_info
         if db_type == "sqlite":
             with connect_db(db_name) as conn:
                 schema_info = get_schema_info(conn)
@@ -675,23 +667,18 @@ def schema():
 def db_description():
     data = request.json
     db_name = data.get("db_name")
-    if db_name == "Select a database":
+    if db_name == "Select a database" or db_name == "":
         return jsonify({"error": "Please select a valid database"}), 400
     try:
-        is_public = db_name == ""
-        if not is_public:
-            if not current_user.is_authenticated:
-                return jsonify({"error": "Login required for this database"}), 401
-            with sqlite3.connect(USER_DB) as conn:
-                cursor = conn.cursor()
-                cursor.execute("SELECT db_type, db_path FROM user_dbs WHERE user_id = ? AND db_name = ?", (current_user.id, db_name))
-                db_info = cursor.fetchone()
-                if not db_info:
-                    return jsonify({"error": "Database not found or not owned by user"}), 403
-                db_type, db_path = db_info
-        else:
-            db_type = "sqlite"
-            db_path = get_db_path(db_name)
+        if not current_user.is_authenticated:
+            return jsonify({"error": "Login required for this database"}), 401
+        with sqlite3.connect(USER_DB) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT db_type, db_path FROM user_dbs WHERE user_id = ? AND db_name = ?", (current_user.id, db_name))
+            db_info = cursor.fetchone()
+            if not db_info:
+                return jsonify({"error": "Database not found or not owned by user"}), 403
+            db_type, db_path = db_info
         if db_type == "sqlite":
             conn = connect_db(db_name)
         else:
@@ -731,26 +718,19 @@ def ask():
     data = request.json
     db_name = data.get("db_name")
     question = data.get("question")
-    if db_name == "Select a database":
+    if db_name == "Select a database" or db_name == "":
         return jsonify({"error": "Please select a valid database"}), 400
     try:
-        is_public = db_name == ""
         tier = "free" if not current_user.is_authenticated else current_user.subscription_tier
-        if not is_public and tier not in ["standard", "premium"]:
-            return jsonify({"error": "Standard or Premium subscription required for querying private databases"}), 403
-        if not is_public:
-            if not current_user.is_authenticated:
-                return jsonify({"error": "Login required for this database"}), 401
-            with sqlite3.connect(USER_DB) as conn:
-                cursor = conn.cursor()
-                cursor.execute("SELECT db_type, db_path FROM user_dbs WHERE user_id = ? AND db_name = ?", (current_user.id, db_name))
-                db_info = cursor.fetchone()
-                if not db_info:
-                    return jsonify({"error": "Database not found or not owned by user"}), 403
-                db_type, db_path = db_info
-        else:
-            db_type = "sqlite"
-            db_path = get_db_path(db_name)
+        if not current_user.is_authenticated:
+            return jsonify({"error": "Login required for this database"}), 401
+        with sqlite3.connect(USER_DB) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT db_type, db_path FROM user_dbs WHERE user_id = ? AND db_name = ?", (current_user.id, db_name))
+            db_info = cursor.fetchone()
+            if not db_info:
+                return jsonify({"error": "Database not found or not owned by user"}), 403
+            db_type, db_path = db_info
         if db_type == "sqlite":
             conn = connect_db(db_name)
         else:
@@ -769,25 +749,20 @@ def visualize():
     data = request.json
     db_name = data.get("db_name")
     prompt = data.get("prompt")
-    if db_name == "Select a database":
+    if db_name == "Select a database" or db_name == "":
         return jsonify({"error": "Please select a valid database"}), 400
     try:
-        is_public = db_name == ""
         if not current_user.is_authenticated:
             return jsonify({"error": "Login required for visualization"}), 401
         if current_user.subscription_tier != "premium":
             return jsonify({"error": "Premium subscription required for visualization"}), 403
-        if not is_public:
-            with sqlite3.connect(USER_DB) as conn:
-                cursor = conn.cursor()
-                cursor.execute("SELECT db_type, db_path FROM user_dbs WHERE user_id = ? AND db_name = ?", (current_user.id, db_name))
-                db_info = cursor.fetchone()
-                if not db_info:
-                    return jsonify({"error": "Database not found or not owned by user"}), 403
-                db_type, db_path = db_info
-        else:
-            db_type = "sqlite"
-            db_path = get_db_path(db_name)
+        with sqlite3.connect(USER_DB) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT db_type, db_path FROM user_dbs WHERE user_id = ? AND db_name = ?", (current_user.id, db_name))
+            db_info = cursor.fetchone()
+            if not db_info:
+                return jsonify({"error": "Database not found or not owned by user"}), 403
+            db_type, db_path = db_info
         if db_type == "sqlite":
             conn = connect_db(db_name)
         else:
@@ -820,30 +795,22 @@ def visualize():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
 @app.route("/create_db", methods=["POST"])
 @login_required
 def create_db():
     if current_user.subscription_tier not in ["free", "basic", "standard", "premium"]:
         return jsonify({"error": "Free, Basic, Standard, or Premium subscription required for creating databases"}), 403
-
     data = request.json
     db_name = data.get("db_name")
     prompt = data.get("prompt")
-
     if not db_name:
         return jsonify({"error": "Database name is required"}), 400
-
     if not db_name.endswith(".db"):
         db_name += ".db"
-
-    # Create user-specific folder
     user_folder = os.path.join(app.config["UPLOAD_FOLDER"], str(current_user.id))
     os.makedirs(user_folder, exist_ok=True)
-
-    # Full path to user's DB
     db_path = os.path.join(user_folder, db_name)
-
-    # Check only if this user already has a DB with the same name
     with sqlite3.connect(USER_DB) as conn:
         cursor = conn.cursor()
         cursor.execute(
@@ -851,45 +818,35 @@ def create_db():
             (current_user.id, db_name)
         )
         exists = cursor.fetchone()
-
     if exists:
         return jsonify({"error": "You already have a database with this name!"}), 400
-
     try:
-        # Generate schema from LLM
         system_message = {
             "role": "system",
             "content": "You are a SQL assistant. Generate only SQL CREATE TABLE statements based on the user's description. Do not add data, comments or explanation."
         }
         user_message = {"role": "user", "content": prompt}
-
         resp = groq_client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[system_message, user_message]
         )
-
         sql_schema = resp.choices[0].message.content.strip()
         if sql_schema.startswith("```sql"):
             sql_schema = sql_schema.strip("```sql").strip("```").strip()
-
-        # Create actual SQLite DB
         with sqlite3.connect(db_path, timeout=10) as conn:
             conn.execute("PRAGMA journal_mode=WAL;")
             conn.executescript(sql_schema)
             conn.commit()
-
-        # Save reference in user_dbs
         with sqlite3.connect(USER_DB) as conn:
             conn.execute("""
                 INSERT INTO user_dbs (user_id, db_name, db_type, db_path)
                 VALUES (?, ?, ?, ?)
             """, (current_user.id, db_name, "sqlite", db_path))
             conn.commit()
-
         return jsonify({"status": "Database created", "sql_schema": sql_schema})
-
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
 @app.route("/add_row", methods=["POST"])
 @login_required
 def add_row():
@@ -899,11 +856,9 @@ def add_row():
     db_name = data.get("db_name")
     table_name = data.get("table")
     values_text = data.get("values")
-    if db_name == "Select a database":
+    if db_name == "Select a database" or db_name == "":
         return jsonify({"error": "Please select a valid database"}), 400
     try:
-        if db_name == "":
-            return jsonify({"error": "Cannot modify demo.db rows"}), 403
         with sqlite3.connect(USER_DB) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT db_type, db_path FROM user_dbs WHERE user_id = ? AND db_name = ?", (current_user.id, db_name))
@@ -947,11 +902,9 @@ def delete_row():
     condition = data.get("condition")
     if not all([db_name, table, condition]):
         return jsonify({"error": "db_name, table and condition are required"}), 400
-    if db_name == "Select a database":
+    if db_name == "Select a database" or db_name == "":
         return jsonify({"error": "Please select a valid database"}), 400
     try:
-        if db_name == "":
-            return jsonify({"error": "Cannot modify demo.db rows"}), 403
         with sqlite3.connect(USER_DB) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT db_type, db_path FROM user_dbs WHERE user_id = ? AND db_name = ?", (current_user.id, db_name))
@@ -1039,26 +992,19 @@ def upload_db():
 def suggested_queries():
     data = request.json
     db_name = data.get("db_name")
-    if db_name == "Select a database":
+    if db_name == "Select a database" or db_name == "":
         return jsonify({"error": "Please select a valid database"}), 400
     try:
-        is_public = db_name == ""
         tier = "free" if not current_user.is_authenticated else current_user.subscription_tier
-        if not is_public and tier not in ["standard", "premium"]:
-            return jsonify({"error": "Standard or Premium subscription required for suggested queries on private databases"}), 403
-        if not is_public:
-            if not current_user.is_authenticated:
-                return jsonify({"error": "Login required for this database"}), 401
-            with sqlite3.connect(USER_DB) as conn:
-                cursor = conn.cursor()
-                cursor.execute("SELECT db_type, db_path FROM user_dbs WHERE user_id = ? AND db_name = ?", (current_user.id, db_name))
-                db_info = cursor.fetchone()
-                if not db_info:
-                    return jsonify({"error": "Database not found or not owned by user"}), 403
-                db_type, db_path = db_info
-        else:
-            db_type = "sqlite"
-            db_path = get_db_path(db_name)
+        if not current_user.is_authenticated:
+            return jsonify({"error": "Login required for this database"}), 401
+        with sqlite3.connect(USER_DB) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT db_type, db_path FROM user_dbs WHERE user_id = ? AND db_name = ?", (current_user.id, db_name))
+            db_info = cursor.fetchone()
+            if not db_info:
+                return jsonify({"error": "Database not found or not owned by user"}), 403
+            db_type, db_path = db_info
         if db_type == "sqlite":
             conn = connect_db(db_name)
         else:
