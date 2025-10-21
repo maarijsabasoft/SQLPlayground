@@ -366,7 +366,7 @@ def google_auth_callback():
             if not user:
                 cursor.execute(
                     "INSERT INTO users (email, password, subscription_tier) VALUES (?, ?, ?)",
-                    (email, "", "free")  # No password for OAuth users
+                    (email, "", "premium")  # No password for OAuth users
                 )
                 conn.commit()
                 user_id = cursor.lastrowid
@@ -421,7 +421,7 @@ def github_auth_callback():
             if not user:
                 cursor.execute(
                     "INSERT INTO users (email, password, subscription_tier) VALUES (?, ?, ?)",
-                    (email, "", "free")
+                    (email, "", "premium")
                 )
                 conn.commit()
                 user_id = cursor.lastrowid
