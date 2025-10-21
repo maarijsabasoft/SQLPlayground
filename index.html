@@ -2,919 +2,1050 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SQL Nurse</title>
+<title>SQL Nurse - Professional Database Management</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://js.stripe.com/v3/"></script>
 <style>
-/* Theme Variables */
-body.theme-dark {
-    --bg-gradient: linear-gradient(135deg, #000000, #1a1a1a);
-    --text-primary: #e0e0e0;
-    --text-secondary: #b0b0b0;
-    --text-heading: #ffffff;
-    --bg-secondary: rgba(0,0,0,0.8);
-    --bg-input: rgba(0,0,0,0.7);
-    --bg-faint: rgba(255,255,255,0.05);
-    --border-color: #444444;
-    --button-gradient: linear-gradient(45deg, #1a1a1a, #333333);
-    --tab-inactive: rgba(255,255,255,0.1);
-    --h1-gradient: linear-gradient(to right, #aaaaaa, #dddddd);
-    --card-bg: rgba(0,0,0,0.7);
-    --card-border: rgba(255,255,255,0.1);
-    --card-h3: #cccccc;
-    --card-p: #b0b0b0;
+/* Professional Color Scheme */
+:root {
+    --primary: #4361ee;
+    --primary-dark: #3a56d4;
+    --secondary: #7209b7;
+    --accent: #4cc9f0;
+    --light: #f8f9fa;
+    --dark: #212529;
+    --success: #4bb543;
+    --warning: #ffc107;
+    --danger: #dc3545;
+    --gray: #6c757d;
+    --gray-light: #e9ecef;
+    --border-radius: 8px;
+    --box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    --transition: all 0.3s ease;
 }
-body.theme-light {
-    --bg-gradient: linear-gradient(135deg, #ffffff, #f0f0f0);
-    --text-primary: #333333;
-    --text-secondary: #666666;
-    --text-heading: #000000;
-    --bg-secondary: rgba(255,255,255,0.8);
-    --bg-input: rgba(255,255,255,0.7);
-    --bg-faint: rgba(0,0,0,0.05);
-    --border-color: #cccccc;
-    --button-gradient: linear-gradient(45deg, #e0e0e0, #cccccc);
-    --tab-inactive: rgba(0,0,0,0.1);
-    --h1-gradient: linear-gradient(to right, #333333, #000000);
-    --card-bg: rgba(255,255,255,0.7);
-    --card-border: rgba(0,0,0,0.1);
-    --card-h3: #333333;
-    --card-p: #666666;
-}
-body {
+
+* {
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
+}
+
+body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: var(--bg-gradient);
-    background-attachment: fixed;
-    background-repeat: no-repeat;
-    background-size: cover;
-    color: var(--text-primary);
+    background-color: var(--light);
+    color: var(--dark);
+    line-height: 1.6;
+    overflow-x: hidden;
+    width: 100vw;
+}
+
+/* Landing Page Styles */
+#landing-page {
+    width: 100vw;
     overflow-x: hidden;
 }
-header {
-    text-align: center;
-    padding: 20px 0;
-}
-header h1 {
-    font-size: 2.5rem;
-    background: var(--h1-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin: 0;
-}
-header p {
-    font-size: 1.1rem;
-    color: var(--text-secondary);
-    margin: 5px 0 0;
-}
-#landing {
+
+.hero-section {
     height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     text-align: center;
-    transition: opacity 0.5s ease;
+    padding: 0 20px;
+    position: relative;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: white;
 }
-#landing h1 {
-    font-size: 3rem;
-    background: var(--h1-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+
+.hero-section h1 {
+    font-size: 3.5rem;
     margin-bottom: 20px;
+    font-weight: 700;
 }
-#landing p {
-    font-size: 1.2rem;
+
+.hero-section p {
+    font-size: 1.3rem;
+    max-width: 700px;
     margin-bottom: 40px;
-    color: var(--text-secondary);
+    opacity: 0.9;
+    line-height: 1.6;
 }
-#landing button {
-    padding: 15px 40px;
-    font-size: 1.2rem;
-    border-radius: 30px;
-    width: 200px;
+
+.cta-button {
+    padding: 12px 30px;
+    font-size: 1.1rem;
+    border-radius: var(--border-radius);
     border: none;
     cursor: pointer;
-    background: var(--button-gradient);
-    color: var(--text-heading);
-    transition: transform 0.2s;
+    background: white;
+    color: var(--primary);
+    font-weight: 600;
+    transition: var(--transition);
+    box-shadow: var(--box-shadow);
 }
-#landing button:hover { transform: scale(1.05); }
-#app {
-    display: none;
-    padding: 60px 20px 50px 20px;
+
+.cta-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.section {
+    padding: 80px 20px;
     max-width: 1200px;
-    margin: auto;
+    margin: 0 auto;
 }
-.tab {
+
+.section h2 {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 50px;
+    color: var(--dark);
+    position: relative;
+}
+
+.section h2:after {
+    content: '';
+    display: block;
+    width: 80px;
+    height: 4px;
+    background: var(--primary);
+    margin: 15px auto 0;
+    border-radius: 2px;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.feature-card {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 30px;
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+    text-align: center;
+    border-top: 4px solid var(--primary);
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+}
+
+.feature-card h3 {
+    color: var(--dark);
+    margin-bottom: 15px;
+    font-size: 1.5rem;
+}
+
+.feature-card p {
+    color: var(--gray);
+    line-height: 1.6;
+}
+
+.feature-icon {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    color: var(--primary);
+}
+
+.how-it-works {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 50px;
+    box-shadow: var(--box-shadow);
+}
+
+.steps-container {
     display: flex;
-    gap: 5px;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 40px;
+}
+
+.step {
+    flex: 1;
+    min-width: 250px;
+    text-align: center;
+    padding: 20px;
+}
+
+.step-number {
+    display: inline-block;
+    width: 60px;
+    height: 60px;
+    line-height: 60px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
     margin-bottom: 20px;
 }
-.tab button {
+
+.pricing-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+}
+
+.pricing-card {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 40px 30px;
+    box-shadow: var(--box-shadow);
+    text-align: center;
     flex: 1;
-    padding: 12px 20px;
-    border-radius: 10px 10px 0 0;
-    border: none;
-    background: var(--tab-inactive);
-    color: var(--text-primary);
+    min-width: 250px;
+    max-width: 300px;
+    transition: var(--transition);
+    position: relative;
+}
+
+.pricing-card:hover {
+    transform: scale(1.03);
+}
+
+.pricing-card.featured {
+    border: 2px solid var(--primary);
+    transform: scale(1.05);
+}
+
+.pricing-card.featured::before {
+    content: "Most Popular";
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--primary);
+    color: white;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.8rem;
     font-weight: bold;
-    cursor: pointer;
-    transition: 0.3s;
 }
-.tab button.active {
-    background: var(--button-gradient);
-    color: var(--text-heading);
+
+.pricing-card h3 {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    color: var(--dark);
 }
-.tabcontent {
-    display: none;
-    padding: 20px;
-    background: var(--bg-secondary);
-    border-radius: 0 10px 10px 10px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-    animation: fadeIn 0.5s;
+
+.price {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin: 20px 0;
+    color: var(--primary);
 }
-@keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
-h2 {
-    color: var(--text-heading);
-    margin-bottom: 10px;
-}
-select, input, textarea, button {
-    width: 100%;
-    padding: 12px;
-    margin: 8px 0;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    background: var(--bg-input);
-    color: var(--text-primary);
+
+.price-period {
     font-size: 1rem;
+    color: var(--gray);
 }
-textarea { resize: vertical; }
-button {
-    background: var(--button-gradient);
-    color: var(--text-heading);
-    font-weight: bold;
-}
-button:hover { opacity: 0.9; }
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-}
-th, td {
-    border: 1px solid var(--border-color);
-    padding: 10px;
+
+.pricing-features {
+    list-style: none;
+    padding: 0;
+    margin: 30px 0;
     text-align: left;
 }
-th {
-    background: var(--bg-faint);
-}
-pre {
-    background: var(--bg-secondary);
-    padding: 15px;
-    border-radius: 8px;
-    overflow-x: auto;
-}
-#db_description {
-    background: var(--bg-faint);
-    padding: 12px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-}
-#db_prompt, #new_db_name, #add_row_values, #question,
-#connect_db_file, #connect_host, #connect_port,
-#connect_database, #connect_user, #connect_password,
-#viz_prompt {
-    width: calc(100% - 25px);
-}
-.subscriptions {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-}
-.card {
-    background: var(--card-bg);
-    padding: 18px;
-    border-radius: 12px;
-    border: 1px solid var(--card-border);
-    width: 260px;
-}
-.card h3 { margin: 0 0 8px 0; color: var(--card-h3); }
-.card p { color: var(--card-p); margin: 0 0 12px 0; }
-.card button { width: 100%; }
-#theme-toggle {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    z-index: 1000;
-    padding: 8px;
-    border-radius: 50%;
-    background: var(--button-gradient);
-    color: var(--text-heading);
-    border: none;
-    cursor: pointer;
-    font-size: 1.5rem;
-    width: 40px;
-    height: 40px;
+
+.pricing-features li {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--gray-light);
+    color: var(--gray);
     display: flex;
     align-items: center;
-    justify-content: center;
 }
-#auth-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
+
+.pricing-features li:before {
+    content: '✓';
+    color: var(--success);
+    margin-right: 10px;
+    font-weight: bold;
 }
-#auth-section input {
-    width: 300px;
+
+.pricing-features li:last-child {
+    border-bottom: none;
 }
-#auth-message {
-    color: var(--text-secondary);
-    margin-top: 10px;
+
+.faq-container {
+    max-width: 800px;
+    margin: 0 auto;
 }
-#profile-container {
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    z-index: 1000;
+
+.faq-item {
+    margin-bottom: 20px;
+    border: 1px solid var(--gray-light);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    background: white;
 }
-#profile-icon {
-    padding: 8px;
-    border-radius: 50%;
-    background: var(--button-gradient);
-    color: var(--text-heading);
-    border: none;
-    cursor: pointer;
-    font-size: 1.5rem;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-#logout {
-    display: none;
-    position: absolute;
-    top: 50px;
-    left: 0;
-    padding: 8px 16px;
-    border-radius: 8px;
-    background: var(--button-gradient);
-    color: var(--text-heading);
-    border: none;
-    cursor: pointer;
-    font-size: 1rem;
-}
-#popup {
-    display: none;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: var(--card-bg);
+
+.faq-question {
     padding: 20px;
-    border-radius: 12px;
-    border: 1px solid var(--card-border);
-    z-index: 2000;
-    text-align: center;
-    max-width: 400px;
+    background: var(--gray-light);
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: var(--transition);
 }
-#popup p {
-    color: var(--card-p);
+
+.faq-question:hover {
+    background: #dae0e5;
+}
+
+.faq-answer {
+    padding: 0 20px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s, padding 0.3s;
+}
+
+.faq-item.active .faq-answer {
+    padding: 20px;
+    max-height: 500px;
+}
+
+.final-cta {
+    text-align: center;
+    padding: 80px 20px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    border-radius: var(--border-radius);
+    color: white;
+}
+
+.final-cta h2 {
+    color: white;
     margin-bottom: 20px;
 }
-#popup button {
-    padding: 10px 20px;
+
+.final-cta h2:after {
+    background: white;
 }
-#overlay {
+
+.final-cta p {
+    max-width: 600px;
+    margin: 0 auto 40px;
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+/* Navigation */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 20px;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: var(--transition);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.navbar.scrolled {
+    background: rgba(255, 255, 255, 0.98);
+    padding: 15px 20px;
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.navbar-nav {
+    display: flex;
+    gap: 30px;
+}
+
+.navbar-nav a {
+    color: var(--dark);
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition);
+    padding: 5px 0;
+    position: relative;
+}
+
+.navbar-nav a:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--primary);
+    transition: var(--transition);
+}
+
+.navbar-nav a:hover {
+    color: var(--primary);
+}
+
+.navbar-nav a:hover:after {
+    width: 100%;
+}
+
+.navbar-nav .nav-button {
+    background: var(--primary);
+    color: white;
+    padding: 8px 20px;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+}
+
+.navbar-nav .nav-button:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+.navbar-nav .nav-button:after {
+    display: none;
+}
+
+/* Buttons */
+.btn {
+    padding: 10px 20px;
+    border-radius: var(--border-radius);
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+    display: inline-block;
+    text-align: center;
+    font-size: 0.95rem;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+}
+
+.btn-outline:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-small {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+}
+
+/* Auth Modal */
+.auth-modal {
     display: none;
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 1500;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+}
+
+.auth-container {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 40px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    position: relative;
+}
+
+.auth-container h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: var(--dark);
+}
+
+.auth-tabs {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--gray-light);
+}
+
+.auth-tab {
+    flex: 1;
+    padding: 12px;
+    text-align: center;
+    background: none;
+    border: none;
+    color: var(--gray);
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+    border-bottom: 2px solid transparent;
+}
+
+.auth-tab.active {
+    color: var(--primary);
+    border-bottom: 2px solid var(--primary);
+}
+
+.auth-form {
+    display: none;
+}
+
+.auth-form.active {
+    display: block;
+}
+
+.auth-form input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border: 1px solid var(--gray-light);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    transition: var(--transition);
+}
+
+.auth-form input:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+}
+
+.auth-form button {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.auth-error {
+    color: var(--danger);
+    margin-top: 10px;
+    display: none;
+    text-align: center;
+}
+
+.close-auth {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--gray);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.close-auth:hover {
+    color: var(--dark);
+}
+
+.oauth-buttons {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.oauth-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    color: var(--dark);
+    border: 1px solid var(--gray-light);
+    border-radius: var(--border-radius);
+    padding: 10px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.oauth-btn:hover {
+    background: var(--gray-light);
+    transform: translateY(-2px);
+}
+
+.oauth-btn img {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+}
+
+/* Footer */
+footer {
+    background: var(--dark);
+    color: white;
+    padding: 60px 20px 30px;
+    text-align: center;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 40px;
+    margin-bottom: 40px;
+}
+
+.footer-section {
+    flex: 1;
+    min-width: 200px;
+}
+
+.footer-section h3 {
+    margin-bottom: 20px;
+    color: white;
+}
+
+.footer-section p, .footer-section a {
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 10px;
+    display: block;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.footer-section a:hover {
+    color: white;
+}
+
+.footer-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 20px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hero-section h1 {
+        font-size: 2.5rem;
+    }
+    
+    .navbar-nav {
+        display: none;
+    }
+    
+    .steps-container, .pricing-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .pricing-card {
+        max-width: 100%;
+    }
+    
+    .footer-content {
+        flex-direction: column;
+        text-align: center;
+    }
 }
 </style>
 </head>
-<body class="theme-dark">
-<button id="theme-toggle">☀️</button>
-<!-- <div id="profile-container">
-    <button id="profile-icon">👤</button>
-    <button id="logout">Logout</button>
-</div> -->
-<div id="overlay"></div>
-<div id="popup">
-    <p id="popup-message"></p>
-    <button onclick="goToSubscriptions()">Subscribe Now</button>
-    <button onclick="closePopup()">Close</button>
-</div>
-<div id="landing">
-    <h1>Welcome to SQL Nurse</h1>
-    <!-- <p>Interact with your databases, generate SQL, manage tables, and visualize data, all in one powerful interface.</p> -->
-    <!-- <div id="auth-section">
-        <input type="email" id="email" placeholder="Email">
-        <input type="password" id="password" placeholder="Password">
-        <button onclick="signup()">Sign Up</button>
-        <button onclick="login()">Log In</button>
-        <p id="auth-message"></p>
-    </div> -->
-</div> 
-<div id="app">
-    <header>
-        <h1>SQL Nurse</h1>
-        <p>Your Database Management and Visualization Tool</p>
-    </header>
-    <div class="tab">
-        <button class="tablinks" onclick="checkTabAccess('Databases')">Databases</button>
-        <button class="tablinks" onclick="checkTabAccess('Query')">Query</button>
-        <button class="tablinks" onclick="checkTabAccess('Manage')">Manage Rows</button>
-        <button class="tablinks" onclick="checkTabAccess('CreateDB')">Create DB</button>
-        <button class="tablinks" onclick="checkTabAccess('ConnectDB')">Connect DB</button>
-        <button class="tablinks" onclick="checkTabAccess('Visualization')">Visualization</button>
-        <button class="tablinks" onclick="openTab(event,'Subscriptions')">Subscriptions</button>
-    </div>
-    <div id="Databases" class="tabcontent">
-        <p>
-            If you want to make a demo, you can download the sample database file 
-            <a href="https://drive.google.com/drive/folders/1TM0L-pWEI_MsrPpEmHc4ojLhHnrgEd29?usp=sharing" target="_blank">
-                demo.db
-            </a> 
-            and connect to it from your computer.
-        </p>
-        <h2>Databases & Schema</h2>
-        <select id="db_select"></select>
-        <button onclick="loadSchema()">Load Schema</button>
-        <pre id="schema_view"></pre>
-    </div>
-    <div id="Query" class="tabcontent">
-        <h2>Ask a Question</h2>
-        <select id="db_query_select" onchange="loadDBDescription()"></select>
-        <pre id="db_description">Database description will appear here...</pre>
-        <textarea id="question" placeholder="Ask a question about the selected DB"></textarea>
-        <h3>Suggested Queries:</h3>
-        <div id="suggested_queries" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;"></div>
-        <button onclick="askQuery()">Run Query</button>
-        <h3>Generated SQL:</h3>
-        <pre id="sql_display"></pre>
-        <h3>Results:</h3>
-        <div id="results"></div>
-    </div>
-    <div id="Manage" class="tabcontent">
-        <h2>Manage Table Rows</h2>
-        <select id="db_manage_select" onchange="loadTables()"></select>
-        <select id="table_select" onchange="updateRowPlaceholder();loadTableRows()"></select>
-        <input type="text" id="add_row_values" placeholder="">
-        <button onclick="addRow()">Add Row</button>
-        <div id="table_editor"></div>
-    </div>
-    <div id="CreateDB" class="tabcontent">
-        <h2>Create New Database</h2>
-        <input type="text" id="new_db_name" placeholder="Database name">
-        <textarea id="db_prompt" rows="4" placeholder="Describe tables and columns, e.g., students(id,name,age); courses(id,name,credits)"></textarea>
-        <button onclick="createDB()">Create Database</button>
-        <pre id="create_db_result"></pre>
-    </div>
-    <div id="ConnectDB" class="tabcontent">
-        <h2>Connect Your Database</h2>
-        <select id="connect_db_type">
-            <option value="sqlite">SQLite</option>
-            <option value="mysql">MySQL</option>
-            <option value="postgresql">PostgreSQL</option>
-        </select>
-        <input type="file" id="connect_db_file" accept=".db">
-        <input type="text" id="connect_host" placeholder="Host" style="display:none;">
-        <input type="text" id="connect_port" placeholder="Port" style="display:none;">
-        <input type="text" id="connect_database" placeholder="Database Name" style="display:none;">
-        <input type="text" id="connect_user" placeholder="Username" style="display:none;">
-        <input type="password" id="connect_password" placeholder="Password" style="display:none;">
-        <button onclick="connectDB()">Connect</button>
-        <pre id="connect_db_result"></pre>
-    </div>
-    <div id="Visualization" class="tabcontent">
-        <h2>Data Visualization</h2>
-        <select id="viz_db_select"></select>
-        <textarea id="viz_prompt" placeholder="e.g., Show a bar chart of students per course"></textarea>
-        <button onclick="generateVisualization()">Generate Chart</button>
-        <h3>Generated SQL:</h3>
-        <pre id="viz_sql"></pre>
-        <h3>Chart:</h3>
-        <canvas id="viz_chart" style="max-width:100%;height:400px;"></canvas>
-        <h3>Summary:</h3>
-        <p id="viz_summary"></p>
-    </div>
-    <div id="Subscriptions" class="tabcontent">
-        <h2>Choose a Plan</h2>
-        <div id="subs_info">Loading plans...</div>
-        <div class="subscriptions" id="subscriptions_container"></div>
-        <p style="margin-top:14px;color:var(--text-secondary);">All plans are monthly recurring. Billing handled by Stripe (test mode).</p>
-    </div>
-</div>
-<script>
-let userTier = 'free';
-async function checkLogin() {
-    try {
-        const resp = await fetch("/user_info", {credentials: 'include'});
-        const data = await resp.json();
-        if (data.error) {
-            document.getElementById('landing').style.display = 'flex';
-            document.getElementById('app').style.display = 'none';
-            // document.getElementById('profile-container').style.display = 'none';
-            // document.getElementById('logout').style.display = 'none';
-        } else {
-            userTier = data.tier;
-            document.getElementById('landing').style.display = 'none';
-            document.getElementById('app').style.display = 'block';
-            // document.getElementById('profile-container').style.display = 'block';
-            loadDatabases();
-            document.querySelectorAll('.tablinks')[0].click();
-        }
-    } catch (err) {
-        document.getElementById('auth-message').innerText = 'Error checking login status: ' + err;
-    }
-}
-checkLogin();
-async function signup() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    if (!email || !password) {
-        document.getElementById('auth-message').innerText = 'Please enter both email and password';
-        return;
-    }
-    try {
-        const resp = await fetch('/signup', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({email, password}),
-            credentials: 'include'
-        });
-        const data = await resp.json();
-        document.getElementById('auth-message').innerText = data.error ? data.error : 'Signed up successfully!';
-        if (!data.error) {
-            userTier = data.tier;
-            document.getElementById('landing').style.display = 'none';
-            document.getElementById('app').style.display = 'block';
-            // document.getElementById('profile-container').style.display = 'block';
-            // document.getElementById('logout').style.display = 'none';
-            loadDatabases();
-            document.querySelectorAll('.tablinks')[0].click();
-        }
-    } catch (err) {
-        document.getElementById('auth-message').innerText = 'Error during signup: ' + err;
-    }
-}
-async function login() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    if (!email || !password) {
-        document.getElementById('auth-message').innerText = 'Please enter both email and password';
-        return;
-    }
-    try {
-        const resp = await fetch('/login', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({email, password}),
-            credentials: 'include'
-        });
-        const data = await resp.json();
-        document.getElementById('auth-message').innerText = data.error ? data.error : 'Logged in successfully!';
-        if (!data.error) {
-            userTier = data.tier;
-            document.getElementById('landing').style.display = 'none';
-            document.getElementById('app').style.display = 'block';
-            // document.getElementById('profile-container').style.display = 'block';
-            // document.getElementById('logout').style.display = 'none';
-            loadDatabases();
-            document.querySelectorAll('.tablinks')[0].click();
-        }
-    } catch (err) {
-        document.getElementById('auth-message').innerText = 'Error during login: ' + err;
-    }
-}
-function checkTabAccess(tabName) {
-    const accessRules = {
-        'Databases': ['free', 'basic', 'standard', 'premium'],
-        'Query': ['standard', 'premium'],
-        'Manage': ['basic', 'standard', 'premium'],
-        'CreateDB': ['free', 'basic', 'standard', 'premium'],
-        'ConnectDB': ['free', 'basic', 'standard', 'premium'],
-        'Visualization': ['premium'],
-        'Subscriptions': ['free', 'basic', 'standard', 'premium']
-    };
-    if (!accessRules[tabName].includes(userTier)) {
-        showPopup(`You are on the ${userTier} tier and cannot access the ${tabName} feature. Please subscribe to a higher tier.`);
-        return;
-    }
-    openTab({currentTarget: document.querySelector(`button[onclick*="${tabName}"]`)}, tabName);
-}
-function showPopup(message) {
-    document.getElementById('popup-message').innerText = message;
-    document.getElementById('popup').style.display = 'block';
-    document.getElementById('overlay').style.display = 'block';
-}
-function closePopup() {
-    document.getElementById('popup').style.display = 'none';
-    document.getElementById('overlay').style.display = 'none';
-}
-function goToSubscriptions() {
-    closePopup();
-    openTab({currentTarget: document.querySelector(`button[onclick*='Subscriptions']`)}, 'Subscriptions');
-}
-document.getElementById('theme-toggle').addEventListener('click', () => {
-    if (document.body.classList.contains('theme-dark')) {
-        document.body.classList.remove('theme-dark');
-        document.body.classList.add('theme-light');
-        document.getElementById('theme-toggle').innerHTML = '🌙';
-    } else {
-        document.body.classList.remove('theme-light');
-        document.body.classList.add('theme-dark');
-        document.getElementById('theme-toggle').innerHTML = '☀️';
-    }
-});
-function showApp() {
-    document.getElementById('landing').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    checkTabAccess('Databases');
-}
-function openTab(evt, tabName) {
-    var i, tabcontent = document.getElementsByClassName("tabcontent"), tablinks = document.getElementsByClassName("tablinks");
-    for (i = 0; i < tabcontent.length; i++) tabcontent[i].style.display = "none";
-    for (i = 0; i < tablinks.length; i++) tablinks[i].className = tablinks[i].className.replace(" active", "");
-    document.getElementById(tabName).style.display = "block";
-    evt.currentTarget.className += " active";
-}
-document.getElementById("connect_db_type").addEventListener("change", function() {
-    const type = this.value;
-    document.getElementById("connect_db_file").style.display = type === "sqlite" ? "block" : "none";
-    ["connect_host", "connect_port", "connect_database", "connect_user", "connect_password"].forEach(id => {
-        document.getElementById(id).style.display = type !== "sqlite" ? "block" : "none";
-    });
-});
-async function connectDB() {
-    const type = document.getElementById("connect_db_type").value;
-    if (type === "sqlite") {
-        const fileInput = document.getElementById("connect_db_file");
-        if (!fileInput.files.length) {
-            alert("Please select a .db file");
-            return;
-        }
-        const formData = new FormData();
-        formData.append("file", fileInput.files[0]);
-        try {
-            const resp = await fetch("/upload_db", {
-                method: "POST",
-                body: formData,
-                credentials: 'include'
-            });
-            const data = await resp.json();
-            document.getElementById("connect_db_result").innerText = data.error ? data.error : JSON.stringify(data.schema, null, 2);
-            if (!data.error) {
-                alert("Database uploaded successfully!");
-                loadDatabases();
-            }
-        } catch (err) {
-            document.getElementById("connect_db_result").innerText = "Error uploading database: " + err;
-        }
-    } else {
-        const payload = {
-            db_type: type,
-            host: document.getElementById("connect_host").value,
-            port: document.getElementById("connect_port").value,
-            database: document.getElementById("connect_database").value,
-            db_name: document.getElementById("connect_database").value,
-            user: document.getElementById("connect_user").value,
-            password: document.getElementById("connect_password").value
-        };
-        try {
-            const resp = await fetch("/connect_db", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify(payload),
-                credentials: 'include'
-            });
-            const data = await resp.json();
-            document.getElementById("connect_db_result").innerText = data.error ? data.error : JSON.stringify(data.schema, null, 2);
-            if (!data.error) {
-                alert("Database connected successfully!");
-                loadDatabases();
-            }
-        } catch (err) {
-            document.getElementById("connect_db_result").innerText = "Error connecting database: " + err;
-        }
-    }
-}
-async function loadDatabases() {
-    const resp = await fetch("/public_databases", {credentials: 'include'});
-    const data = await resp.json();
-    if (data.error) return;
-    ["db_select", "db_query_select", "db_manage_select", "viz_db_select"].forEach(id => {
-        const sel = document.getElementById(id);
-        sel.innerHTML = "";
-        data.databases.forEach(db => {
-            let o = document.createElement("option");
-            o.value = db;
-            o.text = db;
-            sel.appendChild(o);
-        });
-    });
-    loadTables();
-}
-async function loadSchema() {
-    const db = document.getElementById("db_select").value;
-    const resp = await fetch("/schema", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name: db}), credentials: 'include'});
-    const data = await resp.json();
-    document.getElementById("schema_view").innerText = data.error ? data.error : JSON.stringify(data.schema, null, 2);
-}
-async function loadDBDescription() {
-    const db = document.getElementById("db_query_select").value;
-    if (!db) return;
-    const resp = await fetch("/db_description", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name: db}), credentials: 'include'});
-    const data = await resp.json();
-    document.getElementById("db_description").innerText = data.error ? data.error : data.description;
+<body>
+<!-- Landing Page -->
+<div id="landing-page">
+    <nav class="navbar">
+        <div class="navbar-brand">SQL Nurse</div>
+        <div class="navbar-nav">
+            <a href="#features">Features</a>
+            <a href="#how-it-works">How It Works</a>
+            <a href="#pricing">Pricing</a>
+            <a href="#faq">FAQ</a>
+            <a href="#" class="nav-button" id="nav-login">Login</a>
+        </div>
+    </nav>
 
-    // Load suggested queries
-    const s_resp = await fetch("/suggested_queries", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name: db}), credentials: 'include'});
-    const s_data = await s_resp.json();
-    const sug_div = document.getElementById("suggested_queries");
-    sug_div.innerHTML = '';
-    if (s_data.error) {
-        return;
-    }
-    s_data.queries.forEach(q => {
-        const btn = document.createElement("button");
-        btn.innerText = q;
-        btn.style.flex = "1 1 auto";
-        btn.style.maxWidth = "30%";
-        btn.onclick = () => { document.getElementById("question").value = q; };
-        sug_div.appendChild(btn);
-    });
-}
-async function askQuery() {
-    if (!['standard', 'premium'].includes(userTier)) {
-        showPopup('You are on the ' + userTier + ' tier and cannot access the Query feature. Please subscribe to a higher tier.');
-        return;
-    }
-    const db = document.getElementById("db_query_select").value;
-    const question = document.getElementById("question").value;
-    const resp = await fetch("/ask", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name: db, question}), credentials: 'include'});
-    const data = await resp.json();
-    if (data.error) {
-        alert(data.error);
-        return;
-    }
-    document.getElementById("sql_display").innerText = data.sql;
-    const div = document.getElementById("results");
-    if (data.result.error) {
-        div.innerText = data.result.error;
-        return;
-    }
-    let html = "<table><thead><tr>";
-    data.result.columns.forEach(c => html += `<th>${c}</th>`);
-    html += "</tr></thead><tbody>";
-    data.result.rows.forEach(r => {
-        html += "<tr>";
-        data.result.columns.forEach(c => html += `<td>${r[c]}</td>`);
-        html += "</tr>";
-    });
-    html += "</tbody></table>";
-    div.innerHTML = html;
-}
-async function createDB() {
-    if (!['free', 'basic', 'standard', 'premium'].includes(userTier)) {
-        showPopup('You are on the ' + userTier + ' tier and cannot access the Create DB feature. Please subscribe to a higher tier.');
-        return;
-    }
-    const db_name = document.getElementById("new_db_name").value;
-    const prompt = document.getElementById("db_prompt").value;
-    if (!db_name || !prompt) {
-        alert("Provide database name and prompt");
-        return;
-    }
-    const resp = await fetch("/create_db", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name, prompt}), credentials: 'include'});
-    const data = await resp.json();
-    document.getElementById("create_db_result").innerText = data.error ? data.error : "Database Created!\n" + data.sql_schema;
-    loadDatabases();
-}
-async function loadTables() {
-    const db = document.getElementById("db_manage_select").value;
-    const resp = await fetch("/schema", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name: db}), credentials: 'include'});
-    const data = await resp.json();
-    const sel = document.getElementById("table_select");
-    sel.innerHTML = '';
-    if (data.schema) {
-        Object.keys(data.schema).forEach(t => {
-            let o = document.createElement("option");
-            o.value = t;
-            o.text = t;
-            o.selected = true;
-            sel.appendChild(o);
-        });
-    }
-    updateRowPlaceholder();
-    loadTableRows();
-}
-function updateRowPlaceholder() {
-    const db = document.getElementById("db_manage_select").value;
-    const table = document.getElementById("table_select").value;
-    if (!db || !table) return;
-    fetch("/schema", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({db_name: db}),
-        credentials: 'include'
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.schema && data.schema[table.toLowerCase()]) {
-            document.getElementById("add_row_values").placeholder =
-                "Write all values according to number of columns separated by commas e.g if cols are id, name and age then add like 1,abc,22";
+    <section class="hero-section">
+        <h1>Revolutionize Your Database Management</h1>
+        <p>SQL Nurse is an all-in-one platform that simplifies database interaction, query generation, table management, and data visualization with an intuitive interface.</p>
+        <button class="cta-button" id="get-started-btn">Get Started Free</button>
+    </section>
+
+    <section class="section" id="features">
+        <h2>Powerful Features</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <h3>Smart Query Generation</h3>
+                <p>Ask questions in plain English and get accurate SQL queries generated automatically.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Data Visualization</h3>
+                <p>Transform your query results into beautiful charts and graphs with a single click.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔄</div>
+                <h3>Multi-Database Support</h3>
+                <p>Connect to SQLite, MySQL, PostgreSQL and more with seamless integration.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Real-time Management</h3>
+                <p>Add, edit, and delete table rows directly through our intuitive interface.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🛡️</div>
+                <h3>Secure & Private</h3>
+                <p>Your data stays secure with enterprise-grade encryption and privacy controls.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <h3>AI-Powered Insights</h3>
+                <p>Get intelligent suggestions and insights based on your database structure.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="how-it-works">
+        <h2>How It Works</h2>
+        <div class="how-it-works">
+            <div class="steps-container">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Connect Your Database</h3>
+                    <p>Link your existing database or create a new one from scratch.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Ask Questions</h3>
+                    <p>Use natural language to query your data without writing SQL.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Get Results & Visualize</h3>
+                    <p>View query results and transform them into insightful visualizations.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <h3>Manage & Optimize</h3>
+                    <p>Easily manage your tables and optimize your database structure.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="pricing">
+        <h2>Simple, Transparent Pricing</h2>
+        <div class="pricing-container">
+            <div class="pricing-card">
+                <h3>Free</h3>
+                <div class="price">$0<span class="price-period">/month</span></div>
+                <ul class="pricing-features">
+                    <li>Connect 1 Database</li>
+                    <li>Basic Query Generation</li>
+                    <li>Limited Visualizations</li>
+                    <li>Community Support</li>
+                </ul>
+                <button class="btn btn-outline btn-small" onclick="showAuthModal('signup')">Get Started</button>
+            </div>
+            <div class="pricing-card featured">
+                <h3>Standard</h3>
+                <div class="price">$15<span class="price-period">/month</span></div>
+                <ul class="pricing-features">
+                    <li>Connect 5 Databases</li>
+                    <li>Advanced Query Generation</li>
+                    <li>Enhanced Visualizations</li>
+                    <li>Row Management</li>
+                    <li>Priority Support</li>
+                </ul>
+                <button class="btn btn-primary btn-small" onclick="showAuthModal('signup')">Try Free for 14 Days</button>
+            </div>
+            <div class="pricing-card">
+                <h3>Premium</h3>
+                <div class="price">$25<span class="price-period">/month</span></div>
+                <ul class="pricing-features">
+                    <li>Unlimited Databases</li>
+                    <li>AI-Powered Insights</li>
+                    <li>Advanced Visualizations</li>
+                    <li>Full Management Features</li>
+                    <li>Dedicated Support</li>
+                </ul>
+                <button class="btn btn-outline btn-small" onclick="showAuthModal('signup')">Try Free for 14 Days</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="faq">
+        <h2>Frequently Asked Questions</h2>
+        <div class="faq-container">
+            <div class="faq-item">
+                <div class="faq-question">
+                    What databases does SQL Nurse support?
+                    <span>+</span>
+                </div>
+                <div class="faq-answer">
+                    SQL Nurse currently supports SQLite, MySQL, and PostgreSQL. We're continuously working to add support for more database systems.
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question">
+                    Is my data secure?
+                    <span>+</span>
+                </div>
+                <div class="faq-answer">
+                    Yes, security is our top priority. We use industry-standard encryption for all data transfers and storage. Your database credentials are never stored in plain text.
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question">
+                    Can I cancel my subscription anytime?
+                    <span>+</span>
+                </div>
+                <div class="faq-answer">
+                    Absolutely! You can cancel your subscription at any time. If you cancel, you'll continue to have access to your paid features until the end of your billing period.
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question">
+                    Do you offer team plans?
+                    <span>+</span>
+                </div>
+                <div class="faq-answer">
+                    Currently, we offer individual plans only. However, we're actively developing team collaboration features and expect to launch team plans in the near future.
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question">
+                    How accurate is the natural language query generation?
+                    <span>+</span>
+                </div>
+                <div class="faq-answer">
+                    Our AI model has been trained on thousands of database schemas and queries, achieving over 90% accuracy for common query types. For complex queries, we provide the generated SQL for you to review and edit if needed.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section final-cta">
+        <h2>Ready to Transform Your Database Workflow?</h2>
+        <p>Join thousands of users who have simplified their database management with SQL Nurse.</p>
+        <button class="cta-button" id="final-cta-btn">Start Your Free Trial</button>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>SQL Nurse</h3>
+                <p>Your complete database management and visualization solution.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Product</h3>
+                <a href="#features">Features</a>
+                <a href="#pricing">Pricing</a>
+                <a href="#faq">FAQ</a>
+            </div>
+            <div class="footer-section">
+                <h3>Company</h3>
+                <a href="#">About Us</a>
+                <a href="#">Blog</a>
+                <a href="#">Contact</a>
+            </div>
+            <div class="footer-section">
+                <h3>Legal</h3>
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2023 SQL Nurse. All rights reserved.</p>
+        </div>
+    </footer>
+</div>
+
+<!-- Auth Modal -->
+<div class="auth-modal" id="auth-modal">
+    <div class="auth-container">
+        <button class="close-auth" onclick="closeAuthModal()">&times;</button>
+        <h2>Welcome to SQL Nurse</h2>
+        <div class="auth-tabs">
+            <button class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
+            <button class="auth-tab" onclick="switchAuthTab('signup')">Sign Up</button>
+        </div>
+        
+        <div id="login-form" class="auth-form active">
+            <input type="email" id="login-email" placeholder="Email" required>
+            <input type="password" id="login-password" placeholder="Password" required>
+            <button class="btn btn-primary" onclick="login()">Login</button>
+            <p class="auth-error" id="login-error"></p>
+            <div class="oauth-buttons">
+                <a href="/auth/google" class="oauth-btn">
+                    <img src="https://www.google.com/favicon.ico" alt="Google logo"> Login with Google
+                </a>
+                <a href="/auth/github" class="oauth-btn">
+                    <img src="https://github.githubassets.com/favicons/favicon.png" alt="GitHub logo"> Login with GitHub
+                </a>
+            </div>
+        </div>
+        
+        <div id="signup-form" class="auth-form">
+            <input type="email" id="signup-email" placeholder="Email" required>
+            <input type="password" id="signup-password" placeholder="Password" required>
+            <button class="btn btn-primary" onclick="signup()">Sign Up</button>
+            <p class="auth-error" id="signup-error"></p>
+            <div class="oauth-buttons">
+                <a href="/auth/google" class="oauth-btn">
+                    <img src="https://www.google.com/favicon.ico" alt="Google logo"> Sign up with Google
+                </a>
+                <a href="/auth/github" class="oauth-btn">
+                    <img src="https://github.githubassets.com/favicons/favicon.png" alt="GitHub logo"> Sign up with GitHub
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Landing page functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Navbar scroll effect
+    window.addEventListener('scroll', function() {
+        const navbar = document.querySelector('.navbar');
+        if (window.scrollY > 50) {
+            navbar.classList.add('scrolled');
+        } else {
+            navbar.classList.remove('scrolled');
         }
     });
-}
-async function loadTableRows() {
-    if (!['basic', 'standard', 'premium'].includes(userTier)) {
-        showPopup('You are on the ' + userTier + ' tier and cannot access the Manage Rows feature. Please subscribe to a higher tier.');
-        return;
-    }
-    const db = document.getElementById("db_manage_select").value;
-    const table = document.getElementById("table_select").value;
-    const resp = await fetch("/ask", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({db_name: db, question: `SELECT * FROM ${table}`}),
-        credentials: 'include'
-    });
-    const data = await resp.json();
-    const div = document.getElementById("table_editor");
-    if (data.result.error) {
-        div.innerText = data.result.error;
-        return;
-    }
-    let html = "<table><thead><tr>";
-    data.result.columns.forEach(c => html += `<th>${c}</th>`);
-    html += "<th>Actions</th></tr></thead><tbody>";
-    const keyCol = data.result.columns[0];
-    data.result.rows.forEach(r => {
-        html += "<tr>";
-        data.result.columns.forEach(c => html += `<td>${r[c]}</td>`);
-        html += `<td><button onclick='deleteRow("${db}","${table}","${keyCol}=${r[keyCol]}")'>Delete</button></td>`;
-        html += "</tr>";
-    });
-    html += "</tbody></table>";
-    div.innerHTML = html;
-}
-async function addRow() {
-    if (!['basic', 'standard', 'premium'].includes(userTier)) {
-        showPopup('You are on the ' + userTier + ' tier and cannot access the Manage Rows feature. Please subscribe to a higher tier.');
-        return;
-    }
-    const db = document.getElementById("db_manage_select").value;
-    const table = document.getElementById("table_select").value;
-    const values = document.getElementById("add_row_values").value;
-    const resp = await fetch("/add_row", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name: db, table, values}), credentials: 'include'});
-    const data = await resp.json();
-    if (data.error) {
-        alert(data.error);
-        return;
-    }
-    alert("Row added!");
-    loadTableRows();
-}
-async function deleteRow(db, table, condition) {
-    if (!['basic', 'standard', 'premium'].includes(userTier)) {
-        showPopup('You are on the ' + userTier + ' tier and cannot access the Manage Rows feature. Please subscribe to a higher tier.');
-        return;
-    }
-    const resp = await fetch("/delete_row", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name: db, table, condition}), credentials: 'include'});
-    const data = await resp.json();
-    if (data.error) {
-        alert(data.error);
-        return;
-    }
-    alert("Row deleted!");
-    loadTableRows();
-}
-let vizChart;
-async function generateVisualization() {
-    if (userTier !== 'premium') {
-        showPopup('You are on the ' + userTier + ' tier and cannot access the Visualization feature. Please subscribe to the Premium tier.');
-        return;
-    }
-    const db = document.getElementById("viz_db_select").value;
-    const prompt = document.getElementById("viz_prompt").value;
-    if (!db || !prompt) {
-        alert("Select DB and enter a prompt");
-        return;
-    }
-    const resp = await fetch("/visualize", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({db_name: db, prompt}),
-        credentials: 'include'
-    });
-    const data = await resp.json();
-    if (data.error) {
-        alert(data.error);
-        return;
-    }
-    document.getElementById("viz_sql").innerText = data.sql;
-    document.getElementById("viz_summary").innerText = data.summary;
-    const cols = data.columns;
-    const rows = data.rows;
-    if (cols.length < 2) {
-        alert("Need at least two columns for a chart");
-        return;
-    }
-    const labels = rows.map(r => r[cols[0]]);
-    const values = rows.map(r => Number(r[cols[1]]) || 0);
-    const isLight = document.body.classList.contains('theme-light');
-    if (vizChart) vizChart.destroy();
-    const ctx = document.getElementById("viz_chart").getContext("2d");
-    vizChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: cols[1],
-                data: values,
-                backgroundColor: isLight ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)',
-                borderColor: isLight ? 'rgba(0, 0, 0, 0.5)' : 'rgba(255, 255, 255, 0.5)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { display: true, labels: {color: isLight ? '#333333' : '#e0e0e0'} },
-                title: { display: true, text: prompt, color: isLight ? '#333333' : '#e0e0e0', font: {size: 18} }
-            },
-            scales: {
-                x: { ticks: {color: isLight ? '#333333' : '#e0e0e0'} },
-                y: { ticks: {color: isLight ? '#333333' : '#e0e0e0'}, beginAtZero: true }
+    
+    // FAQ accordion
+    const faqItems = document.querySelectorAll('.faq-item');
+    faqItems.forEach(item => {
+        const question = item.querySelector('.faq-question');
+        question.addEventListener('click', () => {
+            const isActive = item.classList.contains('active');
+            
+            // Close all FAQ items
+            faqItems.forEach(faq => {
+                faq.classList.remove('active');
+            });
+            
+            // Open clicked item if it wasn't active
+            if (!isActive) {
+                item.classList.add('active');
             }
-        }
-    });
-}
-let stripePublishableKey = "";
-async function loadStripeConfig() {
-    try {
-        const r = await fetch("/stripe_config", {credentials: 'include'});
-        const data = await r.json();
-        stripePublishableKey = data.publishableKey || "";
-        const plans = data.plans || {
-            basic: {nickname: "Basic", amount_cents: 1000},
-            standard: {nickname: "Standard", amount_cents: 1500},
-            premium: {nickname: "Premium", amount_cents: 2500}
-        };
-        const container = document.getElementById("subscriptions_container");
-        container.innerHTML = "";
-        Object.keys(plans).forEach(key => {
-            const p = plans[key];
-            const priceUSD = (p.amount_cents / 100).toFixed(2);
-            const div = document.createElement("div");
-            div.className = "card";
-            div.innerHTML = `<h3>${p.nickname}</h3>
-                             <p>$${priceUSD} / month</p>
-                             <p>Recurring monthly subscription.</p>
-                             <button onclick="startCheckout('${key}')">Subscribe to ${p.nickname}</button>`;
-            container.appendChild(div);
         });
-        document.getElementById("subs_info").innerText = "Stripe test checkout (monthly subscriptions)";
+    });
+    
+    // Get Started buttons
+    document.getElementById('get-started-btn').addEventListener('click', showAuthModal);
+    document.getElementById('final-cta-btn').addEventListener('click', showAuthModal);
+    document.getElementById('nav-login').addEventListener('click', function(e) {
+        e.preventDefault();
+        showAuthModal('login');
+    });
+    
+    // Smooth scrolling for navigation links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                window.scrollTo({
+                    top: target.offsetTop - 80,
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+});
+
+// Auth modal functionality
+function showAuthModal(defaultTab = 'signup') {
+    document.getElementById('auth-modal').style.display = 'flex';
+    switchAuthTab(defaultTab);
+}
+
+function closeAuthModal() {
+    document.getElementById('auth-modal').style.display = 'none';
+    document.getElementById('login-error').style.display = 'none';
+    document.getElementById('signup-error').style.display = 'none';
+}
+
+function switchAuthTab(tab) {
+    // Update tabs
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+    
+    document.querySelector(`.auth-tab[onclick="switchAuthTab('${tab}')"]`).classList.add('active');
+    document.getElementById(`${tab}-form`).classList.add('active');
+    
+    // Clear errors
+    document.getElementById('login-error').style.display = 'none';
+    document.getElementById('signup-error').style.display = 'none';
+}
+
+// Close modal when clicking outside
+window.addEventListener('click', function(e) {
+    if (e.target === document.getElementById('auth-modal')) {
+        closeAuthModal();
+    }
+});
+
+// Authentication functions
+async function signup() {
+    const email = document.getElementById('signup-email').value;
+    const password = document.getElementById('signup-password').value;
+    const error = document.getElementById('signup-error');
+
+    if (!email || !password) {
+        error.textContent = 'Email and password are required';
+        error.style.display = 'block';
+        return;
+    }
+
+    try {
+        // Redirect to auth endpoint
+        window.location.href = `/auth/signup?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
     } catch (err) {
-        document.getElementById("subs_info").innerText = "Failed to load Stripe config: " + err;
+        error.textContent = 'An error occurred. Please try again.';
+        error.style.display = 'block';
     }
 }
-loadStripeConfig();
-async function startCheckout(plan) {
+
+async function login() {
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    const error = document.getElementById('login-error');
+    
+    if (!email || !password) {
+        error.textContent = 'Email and password are required';
+        error.style.display = 'block';
+        return;
+    }
+    
     try {
-        const resp = await fetch("/create-checkout-session", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({plan}),
-            credentials: 'include'
-        });
-        const data = await resp.json();
-        if (data.error) {
-            alert("Error creating checkout session: " + data.error);
-            return;
-        }
-        if (data.url) {
-            window.location = data.url;
-            return;
-        }
-        if (data.id && stripePublishableKey) {
-            const stripe = Stripe(stripePublishableKey);
-            const {error} = await stripe.redirectToCheckout({sessionId: data.id});
-            if (error) alert(error.message);
-            return;
-        }
-        alert("Could not initialize checkout");
+        // Redirect to auth endpoint
+        window.location.href = `/auth/login?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
     } catch (err) {
-        alert("Error: " + err);
+        error.textContent = 'An error occurred. Please try again.';
+        error.style.display = 'block';
     }
 }
 </script>
