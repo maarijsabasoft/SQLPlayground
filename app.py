@@ -266,9 +266,9 @@ def load_user(user_id):
 # ---------- Routes ----------
 @app.route("/")
 def index():
-    if current_user.is_authenticated:
-        return redirect("/app")
-    return redirect("/auth")
+    # if current_user.is_authenticated:
+    return redirect("/app")
+    # return redirect("/auth")
 
 @app.route("/auth")
 def auth_page():
