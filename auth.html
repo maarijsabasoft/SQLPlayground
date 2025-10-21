@@ -4,93 +4,141 @@
     <meta charset="UTF-8">
     <title>SQL Nurse - Authentication</title>
     <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #7209b7;
+            --accent: #4cc9f0;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #4bb543;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --gray: #6c757d;
+            --gray-light: #e9ecef;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #000000, #1a1a1a);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             background-attachment: fixed;
             background-repeat: no-repeat;
             background-size: cover;
-            color: #e0e0e0;
+            color: var(--light);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
         }
+        
         .auth-container {
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(255, 255, 255, 0.95);
             padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
             width: 100%;
             max-width: 400px;
             text-align: center;
+            backdrop-filter: blur(10px);
         }
+        
         h1 {
             font-size: 2.5rem;
-            background: linear-gradient(to right, #aaaaaa, #dddddd);
+            background: linear-gradient(to right, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 20px;
+            font-weight: 700;
         }
+        
         .tabs {
             display: flex;
             gap: 5px;
             margin-bottom: 20px;
+            border-bottom: 1px solid var(--gray-light);
         }
+        
         .tabs button {
             flex: 1;
             padding: 12px;
             border: none;
-            border-radius: 8px 8px 0 0;
-            background: rgba(255, 255, 255, 0.1);
-            color: #e0e0e0;
-            font-weight: bold;
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+            background: transparent;
+            color: var(--gray);
+            font-weight: 600;
             cursor: pointer;
-            transition: 0.3s;
+            transition: var(--transition);
+            border-bottom: 2px solid transparent;
         }
+        
         .tabs button.active {
-            background: linear-gradient(45deg, #1a1a1a, #333333);
-            color: #ffffff;
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
         }
+        
         .tabcontent {
             display: none;
-            padding: 20px;
-            border-radius: 0 0 8px 8px;
-            background: rgba(0, 0, 0, 0.6);
+            padding: 20px 0;
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
         }
+        
         .tabcontent.active {
             display: block;
         }
+        
         input {
-            width: calc(100% - 24px);
+            width: 100%;
             padding: 12px;
             margin: 10px 0;
-            border-radius: 8px;
-            border: 1px solid #444444;
-            background: rgba(0, 0, 0, 0.7);
-            color: #e0e0e0;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--gray-light);
+            background: white;
+            color: var(--dark);
             font-size: 1rem;
+            transition: var(--transition);
         }
+        
+        input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+        
         button.submit {
             width: 100%;
             padding: 12px;
-            border-radius: 8px;
+            border-radius: var(--border-radius);
             border: none;
-            background: linear-gradient(45deg, #1a1a1a, #333333);
-            color: #ffffff;
-            font-weight: bold;
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
             cursor: pointer;
-            transition: opacity 0.3s;
+            transition: var(--transition);
+            margin-top: 10px;
         }
+        
         button.submit:hover {
-            opacity: 0.9;
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
         }
+        
         .oauth-buttons {
             margin-top: 20px;
         }
-        .oauth-button {
+        
+        .oauth-btn {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -98,61 +146,56 @@
             width: 100%;
             padding: 12px;
             margin: 10px 0;
-            border-radius: 8px;
-            border: 1px solid #444444;
-            background: rgba(0, 0, 0, 0.7);
-            color: #e0e0e0;
-            font-weight: bold;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--gray-light);
+            background: white;
+            color: var(--dark);
+            font-weight: 600;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: var(--transition);
+            text-decoration: none;
         }
-        .oauth-button:hover {
-            background: rgba(255, 255, 255, 0.1);
+        
+        .oauth-btn:hover {
+            background: var(--gray-light);
+            transform: translateY(-2px);
         }
-        .oauth-button img {
-            width: 24px;
-            height: 24px;
+        
+        .oauth-btn img {
+            width: 20px;
+            height: 20px;
         }
+        
+        .oauth-btn.google { 
+            background: #4285F4; 
+            color: #fff; 
+            border-color: #4285F4;
+        }
+        
+        .oauth-btn.github { 
+            background: #24292e; 
+            color: #fff; 
+            border-color: #24292e;
+        }
+        
         .error {
-            color: #ff6666;
+            color: var(--danger);
             margin-top: 10px;
             display: none;
+            text-align: center;
         }
+        
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
         }
+        
         .oauth-buttons {
-      margin-top: 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-    .oauth-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #fff;
-      color: #333;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      padding: 0.7rem;
-      font-weight: 600;
-      font-size: clamp(0.85rem, 2.5vw, 1rem);
-      text-decoration: none;
-      transition: background 0.2s, color 0.2s, transform 0.15s;
-    }
-    .oauth-btn.google { background: #4285F4; color: #fff; }
-    .oauth-btn.github { background: #24292e; color: #fff; }
-    .oauth-btn img {
-      width: 20px;
-      height: 20px;
-      margin-right: 0.5rem;
-    }
-    .oauth-btn:hover {
-      opacity: 0.9;
-      transform: translateY(-2px);
-    }
+            margin-top: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -168,27 +211,26 @@
             <button class="submit" onclick="login()">Login</button>
             <p class="error" id="login-error"></p>
             <div class="oauth-buttons">
-<a href="{{ url_for('google_login') }}" class="oauth-btn google" aria-label="Login with Google">
-    <img src="https://www.google.com/favicon.ico" alt="Google logo"> Login with Google
-</a>
-<a href="{{ url_for('github_login') }}" class="oauth-btn github" aria-label="Login with GitHub">
-    <img src="https://github.githubassets.com/favicons/favicon.png" alt="GitHub logo"> Login with GitHub
-</a>
+                <a href="{{ url_for('google_login') }}" class="oauth-btn google" aria-label="Login with Google">
+                    <img src="https://www.google.com/favicon.ico" alt="Google logo"> Login with Google
+                </a>
+                <a href="{{ url_for('github_login') }}" class="oauth-btn github" aria-label="Login with GitHub">
+                    <img src="https://github.githubassets.com/favicons/favicon.png" alt="GitHub logo"> Login with GitHub
+                </a>
             </div>
         </div>
         <div id="signup" class="tabcontent">
-            <!-- <input type="text" id="signup-username" placeholder="Username" required> -->
             <input type="email" id="signup-email" placeholder="Email" required>
             <input type="password" id="signup-password" placeholder="Password" required>
             <button class="submit" onclick="signup()">Sign Up</button>
             <p class="error" id="signup-error"></p>
             <div class="oauth-buttons">
-<a href="{{ url_for('google_login') }}" class="oauth-btn google" aria-label="Login with Google">
-    <img src="https://www.google.com/favicon.ico" alt="Google logo"> Login with Google
-</a>
-<a href="{{ url_for('github_login') }}" class="oauth-btn github" aria-label="Login with GitHub">
-    <img src="https://github.githubassets.com/favicons/favicon.png" alt="GitHub logo"> Login with GitHub
-</a>
+                <a href="{{ url_for('google_login') }}" class="oauth-btn google" aria-label="Login with Google">
+                    <img src="https://www.google.com/favicon.ico" alt="Google logo"> Sign up with Google
+                </a>
+                <a href="{{ url_for('github_login') }}" class="oauth-btn github" aria-label="Login with GitHub">
+                    <img src="https://github.githubassets.com/favicons/favicon.png" alt="GitHub logo"> Sign up with GitHub
+                </a>
             </div>
         </div>
     </div>
@@ -230,48 +272,47 @@
                 error.style.display = 'block';
             }
         }
-async function signup() {
-    const email = document.getElementById('signup-email').value;
-    const password = document.getElementById('signup-password').value;
-    const error = document.getElementById('signup-error');
 
-    if (!email || !password) {
-        error.textContent = 'Email and password are required';
-        error.style.display = 'block';
-        return;
-    }
+        async function signup() {
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const error = document.getElementById('signup-error');
 
-    try {
-        const response = await fetch('/signup', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password }),
-            credentials: 'include'
-        });
+            if (!email || !password) {
+                error.textContent = 'Email and password are required';
+                error.style.display = 'block';
+                return;
+            }
 
-        const data = await response.json();
+            try {
+                const response = await fetch('/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password }),
+                    credentials: 'include'
+                });
 
-        if (data.error) {
-            error.textContent = data.error;
-            error.style.display = 'block';
-        } else {
-            // ✅ Show success message before redirect
-            error.style.color = '#66ff66';
-            error.textContent = data.message || 'Signup successful!';
-            error.style.display = 'block';
+                const data = await response.json();
 
-            // Redirect after 1.5 seconds
-            setTimeout(() => {
-                window.location.href = data.redirect;
-            }, 1500);
+                if (data.error) {
+                    error.textContent = data.error;
+                    error.style.display = 'block';
+                } else {
+                    // ✅ Show success message before redirect
+                    error.style.color = '#4bb543';
+                    error.textContent = data.message || 'Signup successful!';
+                    error.style.display = 'block';
+
+                    // Redirect after 1.5 seconds
+                    setTimeout(() => {
+                        window.location.href = data.redirect;
+                    }, 1500);
+                }
+            } catch (err) {
+                error.textContent = 'An error occurred. Please try again.';
+                error.style.display = 'block';
+            }
         }
-    } catch (err) {
-        error.textContent = 'An error occurred. Please try again.';
-        error.style.display = 'block';
-    }
-}
-
-
     </script>
 </body>
 </html>
