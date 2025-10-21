@@ -2,45 +2,65 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SQL Nurse - Professional Database Management</title>
+<title>SQL Nurse - Your Database Management Solution</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://js.stripe.com/v3/"></script>
 <style>
-/* Professional Color Scheme */
-:root {
-    --primary: #4361ee;
-    --primary-dark: #3a56d4;
-    --secondary: #7209b7;
-    --accent: #4cc9f0;
-    --light: #f8f9fa;
-    --dark: #212529;
-    --success: #4bb543;
-    --warning: #ffc107;
-    --danger: #dc3545;
-    --gray: #6c757d;
-    --gray-light: #e9ecef;
-    --box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    --transition: all 0.3s ease;
+/* Theme Variables */
+body.theme-dark {
+    --bg-gradient: linear-gradient(135deg, #000000, #1a1a1a);
+    --text-primary: #e0e0e0;
+    --text-secondary: #b0b0b0;
+    --text-heading: #ffffff;
+    --bg-secondary: rgba(0,0,0,0.8);
+    --bg-input: rgba(0,0,0,0.7);
+    --bg-faint: rgba(255,255,255,0.05);
+    --border-color: #444444;
+    --button-gradient: linear-gradient(45deg, #1a1a1a, #333333);
+    --tab-inactive: rgba(255,255,255,0.1);
+    --h1-gradient: linear-gradient(to right, #aaaaaa, #dddddd);
+    --card-bg: rgba(0,0,0,0.7);
+    --card-border: rgba(255,255,255,0.1);
+    --card-h3: #cccccc;
+    --card-p: #b0b0b0;
+    --section-bg: rgba(0,0,0,0.6);
+    --cta-bg: linear-gradient(45deg, #2c3e50, #3498db);
 }
-
-* {
+body.theme-light {
+    --bg-gradient: linear-gradient(135deg, #ffffff, #f0f0f0);
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --text-heading: #000000;
+    --bg-secondary: rgba(255,255,255,0.8);
+    --bg-input: rgba(255,255,255,0.7);
+    --bg-faint: rgba(0,0,0,0.05);
+    --border-color: #cccccc;
+    --button-gradient: linear-gradient(45deg, #e0e0e0, #cccccc);
+    --tab-inactive: rgba(0,0,0,0.1);
+    --h1-gradient: linear-gradient(to right, #333333, #000000);
+    --card-bg: rgba(255,255,255,0.7);
+    --card-border: rgba(0,0,0,0.1);
+    --card-h3: #333333;
+    --card-p: #666666;
+    --section-bg: rgba(255,255,255,0.8);
+    --cta-bg: linear-gradient(45deg, #3498db, #2c3e50);
+}
+body {
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
-}
-
-body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: var(--light);
-    color: var(--dark);
-    line-height: 1.6;
+    background: var(--bg-gradient);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-size: cover;
+    color: var(--text-primary);
     overflow-x: hidden;
-    width: 100vw;
+    scroll-behavior: smooth;
 }
 
 /* Landing Page Styles */
 #landing-page {
-    width: 100vw;
+    width: 100%;
     overflow-x: hidden;
 }
 
@@ -53,40 +73,40 @@ body {
     text-align: center;
     padding: 0 20px;
     position: relative;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-    color: white;
 }
 
 .hero-section h1 {
     font-size: 3.5rem;
+    background: var(--h1-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
     margin-bottom: 20px;
-    font-weight: 700;
 }
 
 .hero-section p {
     font-size: 1.3rem;
     max-width: 700px;
     margin-bottom: 40px;
-    opacity: 0.9;
+    color: var(--text-secondary);
     line-height: 1.6;
 }
 
 .cta-button {
-    padding: 12px 30px;
-    font-size: 1.1rem;
-    border-radius: var(--border-radius);
+    padding: 15px 40px;
+    font-size: 1.2rem;
+    border-radius: 30px;
     border: none;
     cursor: pointer;
-    background: white;
-    color: var(--primary);
-    font-weight: 600;
-    transition: var(--transition);
-    box-shadow: var(--box-shadow);
+    background: var(--cta-bg);
+    color: white;
+    font-weight: bold;
+    transition: transform 0.3s, box-shadow 0.3s;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 
 .cta-button:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
 }
 
 .section {
@@ -99,18 +119,7 @@ body {
     text-align: center;
     font-size: 2.5rem;
     margin-bottom: 50px;
-    color: var(--dark);
-    position: relative;
-}
-
-.section h2:after {
-    content: '';
-    display: block;
-    width: 80px;
-    height: 4px;
-    background: var(--primary);
-    margin: 15px auto 0;
-    border-radius: 2px;
+    color: var(--text-heading);
 }
 
 .features-grid {
@@ -120,42 +129,39 @@ body {
 }
 
 .feature-card {
-    background: white;
-    border-radius: var(--border-radius);
+    background: var(--card-bg);
+    border-radius: 12px;
     padding: 30px;
-    box-shadow: var(--box-shadow);
-    transition: var(--transition);
+    border: 1px solid var(--card-border);
+    transition: transform 0.3s, box-shadow 0.3s;
     text-align: center;
-    border-top: 4px solid var(--primary);
 }
 
 .feature-card:hover {
     transform: translateY(-10px);
-    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
 
 .feature-card h3 {
-    color: var(--dark);
+    color: var(--card-h3);
     margin-bottom: 15px;
     font-size: 1.5rem;
 }
 
 .feature-card p {
-    color: var(--gray);
+    color: var(--card-p);
     line-height: 1.6;
 }
 
 .feature-icon {
     font-size: 3rem;
     margin-bottom: 20px;
-    color: var(--primary);
 }
 
 .how-it-works {
-    background: white;
-    border-radius: var(--border-radius);
+    background: var(--section-bg);
+    border-radius: 20px;
     padding: 50px;
-    box-shadow: var(--box-shadow);
 }
 
 .steps-container {
@@ -175,15 +181,46 @@ body {
 
 .step-number {
     display: inline-block;
-    width: 60px;
-    height: 60px;
-    line-height: 60px;
+    width: 50px;
+    height: 50px;
+    line-height: 50px;
     border-radius: 50%;
-    background: var(--primary);
+    background: var(--cta-bg);
     color: white;
     font-size: 1.5rem;
     font-weight: bold;
     margin-bottom: 20px;
+}
+
+.testimonials-container {
+    display: flex;
+    overflow-x: auto;
+    gap: 30px;
+    padding: 20px 0;
+    scrollbar-width: none;
+}
+
+.testimonials-container::-webkit-scrollbar {
+    display: none;
+}
+
+.testimonial {
+    min-width: 300px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 30px;
+    border: 1px solid var(--card-border);
+}
+
+.testimonial-text {
+    font-style: italic;
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.testimonial-author {
+    font-weight: bold;
+    color: var(--text-heading);
 }
 
 .pricing-container {
@@ -194,25 +231,24 @@ body {
 }
 
 .pricing-card {
-    background: white;
-    border-radius: var(--border-radius);
+    background: var(--card-bg);
+    border-radius: 12px;
     padding: 40px 30px;
-    box-shadow: var(--box-shadow);
+    border: 1px solid var(--card-border);
     text-align: center;
     flex: 1;
     min-width: 250px;
     max-width: 300px;
-    transition: var(--transition);
-    position: relative;
+    transition: transform 0.3s;
 }
 
 .pricing-card:hover {
-    transform: scale(1.03);
+    transform: scale(1.05);
 }
 
 .pricing-card.featured {
-    border: 2px solid var(--primary);
-    transform: scale(1.05);
+    border: 2px solid #3498db;
+    position: relative;
 }
 
 .pricing-card.featured::before {
@@ -221,7 +257,7 @@ body {
     top: -15px;
     left: 50%;
     transform: translateX(-50%);
-    background: var(--primary);
+    background: #3498db;
     color: white;
     padding: 5px 15px;
     border-radius: 20px;
@@ -232,19 +268,19 @@ body {
 .pricing-card h3 {
     font-size: 1.8rem;
     margin-bottom: 20px;
-    color: var(--dark);
+    color: var(--text-heading);
 }
 
 .price {
     font-size: 2.5rem;
     font-weight: bold;
     margin: 20px 0;
-    color: var(--primary);
+    color: var(--text-heading);
 }
 
 .price-period {
     font-size: 1rem;
-    color: var(--gray);
+    color: var(--text-secondary);
 }
 
 .pricing-features {
@@ -256,17 +292,8 @@ body {
 
 .pricing-features li {
     padding: 10px 0;
-    border-bottom: 1px solid var(--gray-light);
-    color: var(--gray);
-    display: flex;
-    align-items: center;
-}
-
-.pricing-features li:before {
-    content: '✓';
-    color: var(--success);
-    margin-right: 10px;
-    font-weight: bold;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-secondary);
 }
 
 .pricing-features li:last-child {
@@ -280,25 +307,19 @@ body {
 
 .faq-item {
     margin-bottom: 20px;
-    border: 1px solid var(--gray-light);
-    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
     overflow: hidden;
-    background: white;
 }
 
 .faq-question {
     padding: 20px;
-    background: var(--gray-light);
+    background: var(--bg-faint);
     cursor: pointer;
-    font-weight: 600;
+    font-weight: bold;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: var(--transition);
-}
-
-.faq-question:hover {
-    background: #dae0e5;
 }
 
 .faq-answer {
@@ -316,25 +337,19 @@ body {
 .final-cta {
     text-align: center;
     padding: 80px 20px;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-    border-radius: var(--border-radius);
-    color: white;
+    background: var(--section-bg);
+    border-radius: 20px;
 }
 
 .final-cta h2 {
-    color: white;
     margin-bottom: 20px;
-}
-
-.final-cta h2:after {
-    background: white;
 }
 
 .final-cta p {
     max-width: 600px;
     margin: 0 auto 40px;
     font-size: 1.2rem;
-    opacity: 0.9;
+    color: var(--text-secondary);
 }
 
 /* Navigation */
@@ -345,24 +360,24 @@ body {
     width: 100%;
     padding: 20px;
     z-index: 1000;
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(0,0,0,0.8);
     backdrop-filter: blur(10px);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: var(--transition);
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: background 0.3s;
 }
 
 .navbar.scrolled {
-    background: rgba(255, 255, 255, 0.98);
-    padding: 15px 20px;
+    background: rgba(0,0,0,0.9);
 }
 
 .navbar-brand {
     font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--primary);
+    font-weight: bold;
+    background: var(--h1-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .navbar-nav {
@@ -371,92 +386,264 @@ body {
 }
 
 .navbar-nav a {
-    color: var(--dark);
+    color: var(--text-primary);
     text-decoration: none;
-    font-weight: 500;
-    transition: var(--transition);
-    padding: 5px 0;
-    position: relative;
-}
-
-.navbar-nav a:after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background: var(--primary);
-    transition: var(--transition);
+    transition: color 0.3s;
 }
 
 .navbar-nav a:hover {
-    color: var(--primary);
+    color: var(--text-heading);
 }
 
-.navbar-nav a:hover:after {
-    width: 100%;
+/* Existing app styles (kept for when user logs in) */
+header {
+    text-align: center;
+    padding: 20px 0;
 }
-
-.navbar-nav .nav-button {
-    background: var(--primary);
-    color: white;
-    padding: 8px 20px;
-    border-radius: var(--border-radius);
-    transition: var(--transition);
+header h1 {
+    font-size: 2.5rem;
+    background: var(--h1-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0;
 }
-
-.navbar-nav .nav-button:hover {
-    background: var(--primary-dark);
-    transform: translateY(-2px);
+header p {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin: 5px 0 0;
 }
-
-.navbar-nav .nav-button:after {
-    display: none;
+#landing {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    transition: opacity 0.5s ease;
 }
-
-/* Buttons */
-.btn {
-    padding: 10px 20px;
-    border-radius: var(--border-radius);
+#landing h1 {
+    font-size: 3rem;
+    background: var(--h1-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 20px;
+}
+#landing p {
+    font-size: 1.2rem;
+    margin-bottom: 40px;
+    color: var(--text-secondary);
+}
+#landing button {
+    padding: 15px 40px;
+    font-size: 1.2rem;
+    border-radius: 30px;
+    width: 200px;
     border: none;
     cursor: pointer;
-    font-weight: 600;
-    transition: var(--transition);
-    display: inline-block;
-    text-align: center;
-    font-size: 0.95rem;
+    background: var(--button-gradient);
+    color: var(--text-heading);
+    transition: transform 0.2s;
 }
-
-.btn-primary {
-    background: var(--primary);
-    color: white;
+#landing button:hover { transform: scale(1.05); }
+#app {
+    display: none;
+    padding: 60px 20px 50px 20px;
+    max-width: 1200px;
+    margin: auto;
 }
-
-.btn-primary:hover {
-    background: var(--primary-dark);
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+.tab {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 20px;
 }
-
-.btn-outline {
-    background: transparent;
-    color: var(--primary);
-    border: 2px solid var(--primary);
+.tab button {
+    flex: 1;
+    padding: 12px 20px;
+    border-radius: 10px 10px 0 0;
+    border: none;
+    background: var(--tab-inactive);
+    color: var(--text-primary);
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
 }
-
-.btn-outline:hover {
-    background: var(--primary);
-    color: white;
-    transform: translateY(-2px);
+.tab button.active {
+    background: var(--button-gradient);
+    color: var(--text-heading);
 }
-
-.btn-small {
+.tabcontent {
+    display: none;
+    padding: 20px;
+    background: var(--bg-secondary);
+    border-radius: 0 10px 10px 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    animation: fadeIn 0.5s;
+}
+@keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
+h2 {
+    color: var(--text-heading);
+    margin-bottom: 10px;
+}
+select, input, textarea, button {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+textarea { resize: vertical; }
+button {
+    background: var(--button-gradient);
+    color: var(--text-heading);
+    font-weight: bold;
+}
+button:hover { opacity: 0.9; }
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+th, td {
+    border: 1px solid var(--border-color);
+    padding: 10px;
+    text-align: left;
+}
+th {
+    background: var(--bg-faint);
+}
+pre {
+    background: var(--bg-secondary);
+    padding: 15px;
+    border-radius: 8px;
+    overflow-x: auto;
+}
+#db_description {
+    background: var(--bg-faint);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+#db_prompt, #new_db_name, #add_row_values, #question,
+#connect_db_file, #connect_host, #connect_port,
+#connect_database, #connect_user, #connect_password,
+#viz_prompt {
+    width: calc(100% - 25px);
+}
+.subscriptions {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+.card {
+    background: var(--card-bg);
+    padding: 18px;
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+    width: 260px;
+}
+.card h3 { margin: 0 0 8px 0; color: var(--card-h3); }
+.card p { color: var(--card-p); margin: 0 0 12px 0; }
+.card button { width: 100%; }
+#theme-toggle {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+    padding: 8px;
+    border-radius: 50%;
+    background: var(--button-gradient);
+    color: var(--text-heading);
+    border: none;
+    cursor: pointer;
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#auth-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+#auth-section input {
+    width: 300px;
+}
+#auth-message {
+    color: var(--text-secondary);
+    margin-top: 10px;
+}
+#profile-container {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 1000;
+}
+#profile-icon {
+    padding: 8px;
+    border-radius: 50%;
+    background: var(--button-gradient);
+    color: var(--text-heading);
+    border: none;
+    cursor: pointer;
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#logout {
+    display: none;
+    position: absolute;
+    top: 50px;
+    left: 0;
     padding: 8px 16px;
-    font-size: 0.9rem;
+    border-radius: 8px;
+    background: var(--button-gradient);
+    color: var(--text-heading);
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+}
+#popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+    z-index: 2000;
+    text-align: center;
+    max-width: 400px;
+}
+#popup p {
+    color: var(--card-p);
+    margin-bottom: 20px;
+}
+#popup button {
+    padding: 10px 20px;
+}
+#overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1500;
 }
 
-/* Auth Modal */
+/* Auth Modal Styles */
 .auth-modal {
     display: none;
     position: fixed;
@@ -471,25 +658,24 @@ body {
 }
 
 .auth-container {
-    background: white;
-    border-radius: var(--border-radius);
+    background: var(--card-bg);
+    border-radius: 12px;
     padding: 40px;
     width: 100%;
     max-width: 400px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    position: relative;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
 }
 
 .auth-container h2 {
     text-align: center;
     margin-bottom: 30px;
-    color: var(--dark);
+    color: var(--text-heading);
 }
 
 .auth-tabs {
     display: flex;
     margin-bottom: 20px;
-    border-bottom: 1px solid var(--gray-light);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .auth-tab {
@@ -498,16 +684,15 @@ body {
     text-align: center;
     background: none;
     border: none;
-    color: var(--gray);
+    color: var(--text-primary);
     cursor: pointer;
-    font-weight: 600;
-    transition: var(--transition);
-    border-bottom: 2px solid transparent;
+    font-weight: bold;
+    transition: color 0.3s;
 }
 
 .auth-tab.active {
-    color: var(--primary);
-    border-bottom: 2px solid var(--primary);
+    color: var(--text-heading);
+    border-bottom: 2px solid #3498db;
 }
 
 .auth-form {
@@ -519,19 +704,8 @@ body {
 }
 
 .auth-form input {
-    width: 100%;
-    padding: 12px;
+    width: calc(100% - 24px);
     margin-bottom: 15px;
-    border: 1px solid var(--gray-light);
-    border-radius: var(--border-radius);
-    font-size: 1rem;
-    transition: var(--transition);
-}
-
-.auth-form input:focus {
-    border-color: var(--primary);
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
 }
 
 .auth-form button {
@@ -540,10 +714,9 @@ body {
 }
 
 .auth-error {
-    color: var(--danger);
+    color: #e74c3c;
     margin-top: 10px;
     display: none;
-    text-align: center;
 }
 
 .close-auth {
@@ -553,120 +726,14 @@ body {
     background: none;
     border: none;
     font-size: 1.5rem;
-    color: var(--gray);
+    color: var(--text-primary);
     cursor: pointer;
-    transition: var(--transition);
-}
-
-.close-auth:hover {
-    color: var(--dark);
-}
-
-.oauth-buttons {
-    margin-top: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.oauth-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: white;
-    color: var(--dark);
-    border: 1px solid var(--gray-light);
-    border-radius: var(--border-radius);
-    padding: 10px;
-    font-weight: 500;
-    text-decoration: none;
-    transition: var(--transition);
-}
-
-.oauth-btn:hover {
-    background: var(--gray-light);
-    transform: translateY(-2px);
-}
-
-.oauth-btn img {
-    width: 20px;
-    height: 20px;
-    margin-right: 10px;
-}
-
-/* Footer */
-footer {
-    background: var(--dark);
-    color: white;
-    padding: 60px 20px 30px;
-    text-align: center;
-}
-
-.footer-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 40px;
-    margin-bottom: 40px;
-}
-
-.footer-section {
-    flex: 1;
-    min-width: 200px;
-}
-
-.footer-section h3 {
-    margin-bottom: 20px;
-    color: white;
-}
-
-.footer-section p, .footer-section a {
-    color: rgba(255, 255, 255, 0.7);
-    margin-bottom: 10px;
-    display: block;
-    text-decoration: none;
-    transition: var(--transition);
-}
-
-.footer-section a:hover {
-    color: white;
-}
-
-.footer-bottom {
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding-top: 20px;
-    color: rgba(255, 255, 255, 0.7);
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .hero-section h1 {
-        font-size: 2.5rem;
-    }
-    
-    .navbar-nav {
-        display: none;
-    }
-    
-    .steps-container, .pricing-container {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .pricing-card {
-        max-width: 100%;
-    }
-    
-    .footer-content {
-        flex-direction: column;
-        text-align: center;
-    }
 }
 </style>
 </head>
-<body>
+<body class="theme-dark">
+<button id="theme-toggle">☀️</button>
+
 <!-- Landing Page -->
 <div id="landing-page">
     <nav class="navbar">
@@ -674,9 +741,10 @@ footer {
         <div class="navbar-nav">
             <a href="#features">Features</a>
             <a href="#how-it-works">How It Works</a>
+            <a href="#testimonials">Testimonials</a>
             <a href="#pricing">Pricing</a>
             <a href="#faq">FAQ</a>
-            <a href="#" class="nav-button" id="nav-login">Login</a>
+            <a href="#" id="nav-login">Login</a>
         </div>
     </nav>
 
@@ -750,6 +818,28 @@ footer {
         </div>
     </section>
 
+    <section class="section" id="testimonials">
+        <h2>What Our Users Say</h2>
+        <div class="testimonials-container">
+            <div class="testimonial">
+                <p class="testimonial-text">"SQL Nurse has transformed how our team interacts with databases. The natural language queries save us hours of work each week."</p>
+                <p class="testimonial-author">- Sarah Johnson, Data Analyst</p>
+            </div>
+            <div class="testimonial">
+                <p class="testimonial-text">"As a non-technical founder, I can now query our database without relying on developers. This tool is a game-changer!"</p>
+                <p class="testimonial-author">- Michael Chen, Startup Founder</p>
+            </div>
+            <div class="testimonial">
+                <p class="testimonial-text">"The visualization features are incredible. I can create professional charts in minutes that used to take me hours to code."</p>
+                <p class="testimonial-author">- Emily Rodriguez, Marketing Director</p>
+            </div>
+            <div class="testimonial">
+                <p class="testimonial-text">"Even as an experienced SQL developer, I use SQL Nurse for quick queries and data exploration. It's surprisingly accurate."</p>
+                <p class="testimonial-author">- David Kim, Senior Developer</p>
+            </div>
+        </div>
+    </section>
+
     <section class="section" id="pricing">
         <h2>Simple, Transparent Pricing</h2>
         <div class="pricing-container">
@@ -762,7 +852,7 @@ footer {
                     <li>Limited Visualizations</li>
                     <li>Community Support</li>
                 </ul>
-                <button class="btn btn-outline btn-small" onclick="showAuthModal('signup')">Get Started</button>
+                <button class="cta-button" onclick="showAuthModal('signup')">Get Started</button>
             </div>
             <div class="pricing-card featured">
                 <h3>Standard</h3>
@@ -774,7 +864,7 @@ footer {
                     <li>Row Management</li>
                     <li>Priority Support</li>
                 </ul>
-                <button class="btn btn-primary btn-small" onclick="showAuthModal('signup')">Try Free for 14 Days</button>
+                <button class="cta-button" onclick="showAuthModal('signup')">Try Free for 14 Days</button>
             </div>
             <div class="pricing-card">
                 <h3>Premium</h3>
@@ -786,7 +876,7 @@ footer {
                     <li>Full Management Features</li>
                     <li>Dedicated Support</li>
                 </ul>
-                <button class="btn btn-outline btn-small" onclick="showAuthModal('signup')">Try Free for 14 Days</button>
+                <button class="cta-button" onclick="showAuthModal('signup')">Try Free for 14 Days</button>
             </div>
         </div>
     </section>
@@ -847,35 +937,6 @@ footer {
         <p>Join thousands of users who have simplified their database management with SQL Nurse.</p>
         <button class="cta-button" id="final-cta-btn">Start Your Free Trial</button>
     </section>
-
-    <footer>
-        <div class="footer-content">
-            <div class="footer-section">
-                <h3>SQL Nurse</h3>
-                <p>Your complete database management and visualization solution.</p>
-            </div>
-            <div class="footer-section">
-                <h3>Product</h3>
-                <a href="#features">Features</a>
-                <a href="#pricing">Pricing</a>
-                <a href="#faq">FAQ</a>
-            </div>
-            <div class="footer-section">
-                <h3>Company</h3>
-                <a href="#">About Us</a>
-                <a href="#">Blog</a>
-                <a href="#">Contact</a>
-            </div>
-            <div class="footer-section">
-                <h3>Legal</h3>
-                <a href="#">Privacy Policy</a>
-                <a href="#">Terms of Service</a>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <p>&copy; 2023 SQL Nurse. All rights reserved.</p>
-        </div>
-    </footer>
 </div>
 
 <!-- Auth Modal -->
@@ -891,13 +952,13 @@ footer {
         <div id="login-form" class="auth-form active">
             <input type="email" id="login-email" placeholder="Email" required>
             <input type="password" id="login-password" placeholder="Password" required>
-            <button class="btn btn-primary" onclick="login()">Login</button>
+            <button onclick="login()">Login</button>
             <p class="auth-error" id="login-error"></p>
             <div class="oauth-buttons">
-                <a href="/auth/google" class="oauth-btn">
+                <a href="{{ url_for('google_login') }}" class="oauth-btn google">
                     <img src="https://www.google.com/favicon.ico" alt="Google logo"> Login with Google
                 </a>
-                <a href="/auth/github" class="oauth-btn">
+                <a href="{{ url_for('github_login') }}" class="oauth-btn github">
                     <img src="https://github.githubassets.com/favicons/favicon.png" alt="GitHub logo"> Login with GitHub
                 </a>
             </div>
@@ -906,18 +967,117 @@ footer {
         <div id="signup-form" class="auth-form">
             <input type="email" id="signup-email" placeholder="Email" required>
             <input type="password" id="signup-password" placeholder="Password" required>
-            <button class="btn btn-primary" onclick="signup()">Sign Up</button>
+            <button onclick="signup()">Sign Up</button>
             <p class="auth-error" id="signup-error"></p>
             <div class="oauth-buttons">
-                <a href="/auth/google" class="oauth-btn">
+                <a href="{{ url_for('google_login') }}" class="oauth-btn google">
                     <img src="https://www.google.com/favicon.ico" alt="Google logo"> Sign up with Google
                 </a>
-                <a href="/auth/github" class="oauth-btn">
+                <a href="{{ url_for('github_login') }}" class="oauth-btn github">
                     <img src="https://github.githubassets.com/favicons/favicon.png" alt="GitHub logo"> Sign up with GitHub
                 </a>
             </div>
         </div>
     </div>
+</div>
+
+<!-- Original App (Hidden initially) -->
+<div id="app">
+    <header>
+        <h1>SQL Nurse</h1>
+        <p>Your Database Management and Visualization Tool</p>
+    </header>
+    <div class="tab">
+        <button class="tablinks" onclick="checkTabAccess('Databases')">Databases</button>
+        <button class="tablinks" onclick="checkTabAccess('Query')">Query</button>
+        <button class="tablinks" onclick="checkTabAccess('Manage')">Manage Rows</button>
+        <button class="tablinks" onclick="checkTabAccess('CreateDB')">Create DB</button>
+        <button class="tablinks" onclick="checkTabAccess('ConnectDB')">Connect DB</button>
+        <button class="tablinks" onclick="checkTabAccess('Visualization')">Visualization</button>
+        <button class="tablinks" onclick="openTab(event,'Subscriptions')">Subscriptions</button>
+    </div>
+    <div id="Databases" class="tabcontent">
+        <p>
+            If you want to make a demo, you can download the sample database file 
+            <a href="https://drive.google.com/drive/folders/1TM0L-pWEI_MsrPpEmHc4ojLhHnrgEd29?usp=sharing" target="_blank">
+                demo.db
+            </a> 
+            and connect to it from your computer.
+        </p>
+        <h2>Databases & Schema</h2>
+        <select id="db_select"></select>
+        <button onclick="loadSchema()">Load Schema</button>
+        <pre id="schema_view"></pre>
+    </div>
+    <div id="Query" class="tabcontent">
+        <h2>Ask a Question</h2>
+        <select id="db_query_select" onchange="loadDBDescription()"></select>
+        <pre id="db_description">Database description will appear here...</pre>
+        <textarea id="question" placeholder="Ask a question about the selected DB"></textarea>
+        <h3>Suggested Queries:</h3>
+        <div id="suggested_queries" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;"></div>
+        <button onclick="askQuery()">Run Query</button>
+        <h3>Generated SQL:</h3>
+        <pre id="sql_display"></pre>
+        <h3>Results:</h3>
+        <div id="results"></div>
+    </div>
+    <div id="Manage" class="tabcontent">
+        <h2>Manage Table Rows</h2>
+        <select id="db_manage_select" onchange="loadTables()"></select>
+        <select id="table_select" onchange="updateRowPlaceholder();loadTableRows()"></select>
+        <input type="text" id="add_row_values" placeholder="">
+        <button onclick="addRow()">Add Row</button>
+        <div id="table_editor"></div>
+    </div>
+    <div id="CreateDB" class="tabcontent">
+        <h2>Create New Database</h2>
+        <input type="text" id="new_db_name" placeholder="Database name">
+        <textarea id="db_prompt" rows="4" placeholder="Describe tables and columns, e.g., students(id,name,age); courses(id,name,credits)"></textarea>
+        <button onclick="createDB()">Create Database</button>
+        <pre id="create_db_result"></pre>
+    </div>
+    <div id="ConnectDB" class="tabcontent">
+        <h2>Connect Your Database</h2>
+        <select id="connect_db_type">
+            <option value="sqlite">SQLite</option>
+            <option value="mysql">MySQL</option>
+            <option value="postgresql">PostgreSQL</option>
+        </select>
+        <input type="file" id="connect_db_file" accept=".db">
+        <input type="text" id="connect_host" placeholder="Host" style="display:none;">
+        <input type="text" id="connect_port" placeholder="Port" style="display:none;">
+        <input type="text" id="connect_database" placeholder="Database Name" style="display:none;">
+        <input type="text" id="connect_user" placeholder="Username" style="display:none;">
+        <input type="password" id="connect_password" placeholder="Password" style="display:none;">
+        <button onclick="connectDB()">Connect</button>
+        <pre id="connect_db_result"></pre>
+    </div>
+    <div id="Visualization" class="tabcontent">
+        <h2>Data Visualization</h2>
+        <select id="viz_db_select"></select>
+        <textarea id="viz_prompt" placeholder="e.g., Show a bar chart of students per course"></textarea>
+        <button onclick="generateVisualization()">Generate Chart</button>
+        <h3>Generated SQL:</h3>
+        <pre id="viz_sql"></pre>
+        <h3>Chart:</h3>
+        <canvas id="viz_chart" style="max-width:100%;height:400px;"></canvas>
+        <h3>Summary:</h3>
+        <p id="viz_summary"></p>
+    </div>
+    <div id="Subscriptions" class="tabcontent">
+        <h2>Choose a Plan</h2>
+        <div id="subs_info">Loading plans...</div>
+        <div class="subscriptions" id="subscriptions_container"></div>
+        <p style="margin-top:14px;color:var(--text-secondary);">All plans are monthly recurring. Billing handled by Stripe (test mode).</p>
+    </div>
+</div>
+
+<div id="overlay"></div>
+<div id="popup">
+    <p id="popup-message"></p>
+    <button onclick="goToSubscriptions()">Subscribe Now</button>
+    <button onclick="closePopup()">Close</button>
 </div>
 
 <script>
@@ -938,17 +1098,7 @@ document.addEventListener('DOMContentLoaded', function() {
     faqItems.forEach(item => {
         const question = item.querySelector('.faq-question');
         question.addEventListener('click', () => {
-            const isActive = item.classList.contains('active');
-            
-            // Close all FAQ items
-            faqItems.forEach(faq => {
-                faq.classList.remove('active');
-            });
-            
-            // Open clicked item if it wasn't active
-            if (!isActive) {
-                item.classList.add('active');
-            }
+            item.classList.toggle('active');
         });
     });
     
@@ -958,20 +1108,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('nav-login').addEventListener('click', function(e) {
         e.preventDefault();
         showAuthModal('login');
-    });
-    
-    // Smooth scrolling for navigation links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                window.scrollTo({
-                    top: target.offsetTop - 80,
-                    behavior: 'smooth'
-                });
-            }
-        });
     });
 });
 
@@ -1007,7 +1143,28 @@ window.addEventListener('click', function(e) {
     }
 });
 
-// Authentication functions
+// Existing app functionality (unchanged)
+let userTier = 'free';
+async function checkLogin() {
+    try {
+        const resp = await fetch("/user_info", {credentials: 'include'});
+        const data = await resp.json();
+        if (data.error) {
+            document.getElementById('landing-page').style.display = 'block';
+            document.getElementById('app').style.display = 'none';
+        } else {
+            userTier = data.tier;
+            document.getElementById('landing-page').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            loadDatabases();
+            document.querySelectorAll('.tablinks')[0].click();
+        }
+    } catch (err) {
+        document.getElementById('auth-message').innerText = 'Error checking login status: ' + err;
+    }
+}
+checkLogin();
+
 async function signup() {
     const email = document.getElementById('signup-email').value;
     const password = document.getElementById('signup-password').value;
@@ -1020,8 +1177,32 @@ async function signup() {
     }
 
     try {
-        // Redirect to auth endpoint
-        window.location.href = `/auth/signup?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
+        const response = await fetch('/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+            error.textContent = data.error;
+            error.style.display = 'block';
+        } else {
+            error.style.color = '#66ff66';
+            error.textContent = data.message || 'Signup successful!';
+            error.style.display = 'block';
+
+            setTimeout(() => {
+                closeAuthModal();
+                document.getElementById('landing-page').style.display = 'none';
+                document.getElementById('app').style.display = 'block';
+                userTier = data.tier;
+                loadDatabases();
+                document.querySelectorAll('.tablinks')[0].click();
+            }, 1500);
+        }
     } catch (err) {
         error.textContent = 'An error occurred. Please try again.';
         error.style.display = 'block';
@@ -1040,11 +1221,467 @@ async function login() {
     }
     
     try {
-        // Redirect to auth endpoint
-        window.location.href = `/auth/login?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
+        const response = await fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+            credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            error.textContent = data.error;
+            error.style.display = 'block';
+        } else {
+            closeAuthModal();
+            document.getElementById('landing-page').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            userTier = data.tier;
+            loadDatabases();
+            document.querySelectorAll('.tablinks')[0].click();
+        }
     } catch (err) {
         error.textContent = 'An error occurred. Please try again.';
         error.style.display = 'block';
+    }
+}
+
+function checkTabAccess(tabName) {
+    const accessRules = {
+        'Databases': ['free', 'basic', 'standard', 'premium'],
+        'Query': ['standard', 'premium'],
+        'Manage': ['basic', 'standard', 'premium'],
+        'CreateDB': ['free', 'basic', 'standard', 'premium'],
+        'ConnectDB': ['free', 'basic', 'standard', 'premium'],
+        'Visualization': ['premium'],
+        'Subscriptions': ['free', 'basic', 'standard', 'premium']
+    };
+    if (!accessRules[tabName].includes(userTier)) {
+        showPopup(`You are on the ${userTier} tier and cannot access the ${tabName} feature. Please subscribe to a higher tier.`);
+        return;
+    }
+    openTab({currentTarget: document.querySelector(`button[onclick*="${tabName}"]`)}, tabName);
+}
+
+function showPopup(message) {
+    document.getElementById('popup-message').innerText = message;
+    document.getElementById('popup').style.display = 'block';
+    document.getElementById('overlay').style.display = 'block';
+}
+
+function closePopup() {
+    document.getElementById('popup').style.display = 'none';
+    document.getElementById('overlay').style.display = 'none';
+}
+
+function goToSubscriptions() {
+    closePopup();
+    openTab({currentTarget: document.querySelector(`button[onclick*='Subscriptions']`)}, 'Subscriptions');
+}
+
+document.getElementById('theme-toggle').addEventListener('click', () => {
+    if (document.body.classList.contains('theme-dark')) {
+        document.body.classList.remove('theme-dark');
+        document.body.classList.add('theme-light');
+        document.getElementById('theme-toggle').innerHTML = '🌙';
+    } else {
+        document.body.classList.remove('theme-light');
+        document.body.classList.add('theme-dark');
+        document.getElementById('theme-toggle').innerHTML = '☀️';
+    }
+});
+
+function openTab(evt, tabName) {
+    var i, tabcontent = document.getElementsByClassName("tabcontent"), tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tabcontent.length; i++) tabcontent[i].style.display = "none";
+    for (i = 0; i < tablinks.length; i++) tablinks[i].className = tablinks[i].className.replace(" active", "");
+    document.getElementById(tabName).style.display = "block";
+    evt.currentTarget.className += " active";
+}
+
+document.getElementById("connect_db_type").addEventListener("change", function() {
+    const type = this.value;
+    document.getElementById("connect_db_file").style.display = type === "sqlite" ? "block" : "none";
+    ["connect_host", "connect_port", "connect_database", "connect_user", "connect_password"].forEach(id => {
+        document.getElementById(id).style.display = type !== "sqlite" ? "block" : "none";
+    });
+});
+
+async function connectDB() {
+    const type = document.getElementById("connect_db_type").value;
+    if (type === "sqlite") {
+        const fileInput = document.getElementById("connect_db_file");
+        if (!fileInput.files.length) {
+            alert("Please select a .db file");
+            return;
+        }
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+        try {
+            const resp = await fetch("/upload_db", {
+                method: "POST",
+                body: formData,
+                credentials: 'include'
+            });
+            const data = await resp.json();
+            document.getElementById("connect_db_result").innerText = data.error ? data.error : JSON.stringify(data.schema, null, 2);
+            if (!data.error) {
+                alert("Database uploaded successfully!");
+                loadDatabases();
+            }
+        } catch (err) {
+            document.getElementById("connect_db_result").innerText = "Error uploading database: " + err;
+        }
+    } else {
+        const payload = {
+            db_type: type,
+            host: document.getElementById("connect_host").value,
+            port: document.getElementById("connect_port").value,
+            database: document.getElementById("connect_database").value,
+            db_name: document.getElementById("connect_database").value,
+            user: document.getElementById("connect_user").value,
+            password: document.getElementById("connect_password").value
+        };
+        try {
+            const resp = await fetch("/connect_db", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(payload),
+                credentials: 'include'
+            });
+            const data = await resp.json();
+            document.getElementById("connect_db_result").innerText = data.error ? data.error : JSON.stringify(data.schema, null, 2);
+            if (!data.error) {
+                alert("Database connected successfully!");
+                loadDatabases();
+            }
+        } catch (err) {
+            document.getElementById("connect_db_result").innerText = "Error connecting database: " + err;
+        }
+    }
+}
+
+async function loadDatabases() {
+    const resp = await fetch("/public_databases", {credentials: 'include'});
+    const data = await resp.json();
+    if (data.error) return;
+    ["db_select", "db_query_select", "db_manage_select", "viz_db_select"].forEach(id => {
+        const sel = document.getElementById(id);
+        sel.innerHTML = "";
+        data.databases.forEach(db => {
+            let o = document.createElement("option");
+            o.value = db;
+            o.text = db;
+            sel.appendChild(o);
+        });
+    });
+    loadTables();
+}
+
+async function loadSchema() {
+    const db = document.getElementById("db_select").value;
+    const resp = await fetch("/schema", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name: db}), credentials: 'include'});
+    const data = await resp.json();
+    document.getElementById("schema_view").innerText = data.error ? data.error : JSON.stringify(data.schema, null, 2);
+}
+
+async function loadDBDescription() {
+    const db = document.getElementById("db_query_select").value;
+    if (!db) return;
+    const resp = await fetch("/db_description", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name: db}), credentials: 'include'});
+    const data = await resp.json();
+    document.getElementById("db_description").innerText = data.error ? data.error : data.description;
+
+    // Load suggested queries
+    const s_resp = await fetch("/suggested_queries", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name: db}), credentials: 'include'});
+    const s_data = await s_resp.json();
+    const sug_div = document.getElementById("suggested_queries");
+    sug_div.innerHTML = '';
+    if (s_data.error) {
+        return;
+    }
+    s_data.queries.forEach(q => {
+        const btn = document.createElement("button");
+        btn.innerText = q;
+        btn.style.flex = "1 1 auto";
+        btn.style.maxWidth = "30%";
+        btn.onclick = () => { document.getElementById("question").value = q; };
+        sug_div.appendChild(btn);
+    });
+}
+
+async function askQuery() {
+    if (!['standard', 'premium'].includes(userTier)) {
+        showPopup('You are on the ' + userTier + ' tier and cannot access the Query feature. Please subscribe to a higher tier.');
+        return;
+    }
+    const db = document.getElementById("db_query_select").value;
+    const question = document.getElementById("question").value;
+    const resp = await fetch("/ask", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name: db, question}), credentials: 'include'});
+    const data = await resp.json();
+    if (data.error) {
+        alert(data.error);
+        return;
+    }
+    document.getElementById("sql_display").innerText = data.sql;
+    const div = document.getElementById("results");
+    if (data.result.error) {
+        div.innerText = data.result.error;
+        return;
+    }
+    let html = "<table><thead><tr>";
+    data.result.columns.forEach(c => html += `<th>${c}</th>`);
+    html += "</tr></thead><tbody>";
+    data.result.rows.forEach(r => {
+        html += "<tr>";
+        data.result.columns.forEach(c => html += `<td>${r[c]}</td>`);
+        html += "</tr>";
+    });
+    html += "</tbody></table>";
+    div.innerHTML = html;
+}
+
+async function createDB() {
+    if (!['free', 'basic', 'standard', 'premium'].includes(userTier)) {
+        showPopup('You are on the ' + userTier + ' tier and cannot access the Create DB feature. Please subscribe to a higher tier.');
+        return;
+    }
+    const db_name = document.getElementById("new_db_name").value;
+    const prompt = document.getElementById("db_prompt").value;
+    if (!db_name || !prompt) {
+        alert("Provide database name and prompt");
+        return;
+    }
+    const resp = await fetch("/create_db", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name, prompt}), credentials: 'include'});
+    const data = await resp.json();
+    document.getElementById("create_db_result").innerText = data.error ? data.error : "Database Created!\n" + data.sql_schema;
+    loadDatabases();
+}
+
+async function loadTables() {
+    const db = document.getElementById("db_manage_select").value;
+    const resp = await fetch("/schema", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name: db}), credentials: 'include'});
+    const data = await resp.json();
+    const sel = document.getElementById("table_select");
+    sel.innerHTML = '';
+    if (data.schema) {
+        Object.keys(data.schema).forEach(t => {
+            let o = document.createElement("option");
+            o.value = t;
+            o.text = t;
+            o.selected = true;
+            sel.appendChild(o);
+        });
+    }
+    updateRowPlaceholder();
+    loadTableRows();
+}
+
+function updateRowPlaceholder() {
+    const db = document.getElementById("db_manage_select").value;
+    const table = document.getElementById("table_select").value;
+    if (!db || !table) return;
+    fetch("/schema", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({db_name: db}),
+        credentials: 'include'
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.schema && data.schema[table.toLowerCase()]) {
+            document.getElementById("add_row_values").placeholder =
+                "Write all values according to number of columns separated by commas e.g if cols are id, name and age then add like 1,abc,22";
+        }
+    });
+}
+
+async function loadTableRows() {
+    if (!['basic', 'standard', 'premium'].includes(userTier)) {
+        showPopup('You are on the ' + userTier + ' tier and cannot access the Manage Rows feature. Please subscribe to a higher tier.');
+        return;
+    }
+    const db = document.getElementById("db_manage_select").value;
+    const table = document.getElementById("table_select").value;
+    const resp = await fetch("/ask", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({db_name: db, question: `SELECT * FROM ${table}`}),
+        credentials: 'include'
+    });
+    const data = await resp.json();
+    const div = document.getElementById("table_editor");
+    if (data.result.error) {
+        div.innerText = data.result.error;
+        return;
+    }
+    let html = "<table><thead><tr>";
+    data.result.columns.forEach(c => html += `<th>${c}</th>`);
+    html += "<th>Actions</th></tr></thead><tbody>";
+    const keyCol = data.result.columns[0];
+    data.result.rows.forEach(r => {
+        html += "<tr>";
+        data.result.columns.forEach(c => html += `<td>${r[c]}</td>`);
+        html += `<td><button onclick='deleteRow("${db}","${table}","${keyCol}=${r[keyCol]}")'>Delete</button></td>`;
+        html += "</tr>";
+    });
+    html += "</tbody></table>";
+    div.innerHTML = html;
+}
+
+async function addRow() {
+    if (!['basic', 'standard', 'premium'].includes(userTier)) {
+        showPopup('You are on the ' + userTier + ' tier and cannot access the Manage Rows feature. Please subscribe to a higher tier.');
+        return;
+    }
+    const db = document.getElementById("db_manage_select").value;
+    const table = document.getElementById("table_select").value;
+    const values = document.getElementById("add_row_values").value;
+    const resp = await fetch("/add_row", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name: db, table, values}), credentials: 'include'});
+    const data = await resp.json();
+    if (data.error) {
+        alert(data.error);
+        return;
+    }
+    alert("Row added!");
+    loadTableRows();
+}
+
+async function deleteRow(db, table, condition) {
+    if (!['basic', 'standard', 'premium'].includes(userTier)) {
+        showPopup('You are on the ' + userTier + ' tier and cannot access the Manage Rows feature. Please subscribe to a higher tier.');
+        return;
+    }
+    const resp = await fetch("/delete_row", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name: db, table, condition}), credentials: 'include'});
+    const data = await resp.json();
+    if (data.error) {
+        alert(data.error);
+        return;
+    }
+    alert("Row deleted!");
+    loadTableRows();
+}
+
+let vizChart;
+async function generateVisualization() {
+    if (userTier !== 'premium') {
+        showPopup('You are on the ' + userTier + ' tier and cannot access the Visualization feature. Please subscribe to the Premium tier.');
+        return;
+    }
+    const db = document.getElementById("viz_db_select").value;
+    const prompt = document.getElementById("viz_prompt").value;
+    if (!db || !prompt) {
+        alert("Select DB and enter a prompt");
+        return;
+    }
+    const resp = await fetch("/visualize", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({db_name: db, prompt}),
+        credentials: 'include'
+    });
+    const data = await resp.json();
+    if (data.error) {
+        alert(data.error);
+        return;
+    }
+    document.getElementById("viz_sql").innerText = data.sql;
+    document.getElementById("viz_summary").innerText = data.summary;
+    const cols = data.columns;
+    const rows = data.rows;
+    if (cols.length < 2) {
+        alert("Need at least two columns for a chart");
+        return;
+    }
+    const labels = rows.map(r => r[cols[0]]);
+    const values = rows.map(r => Number(r[cols[1]]) || 0);
+    const isLight = document.body.classList.contains('theme-light');
+    if (vizChart) vizChart.destroy();
+    const ctx = document.getElementById("viz_chart").getContext("2d");
+    vizChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: cols[1],
+                data: values,
+                backgroundColor: isLight ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)',
+                borderColor: isLight ? 'rgba(0, 0, 0, 0.5)' : 'rgba(255, 255, 255, 0.5)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true, labels: {color: isLight ? '#333333' : '#e0e0e0'} },
+                title: { display: true, text: prompt, color: isLight ? '#333333' : '#e0e0e0', font: {size: 18} }
+            },
+            scales: {
+                x: { ticks: {color: isLight ? '#333333' : '#e0e0e0'} },
+                y: { ticks: {color: isLight ? '#333333' : '#e0e0e0'}, beginAtZero: true }
+            }
+        }
+    });
+}
+
+let stripePublishableKey = "";
+async function loadStripeConfig() {
+    try {
+        const r = await fetch("/stripe_config", {credentials: 'include'});
+        const data = await r.json();
+        stripePublishableKey = data.publishableKey || "";
+        const plans = data.plans || {
+            basic: {nickname: "Basic", amount_cents: 1000},
+            standard: {nickname: "Standard", amount_cents: 1500},
+            premium: {nickname: "Premium", amount_cents: 2500}
+        };
+        const container = document.getElementById("subscriptions_container");
+        container.innerHTML = "";
+        Object.keys(plans).forEach(key => {
+            const p = plans[key];
+            const priceUSD = (p.amount_cents / 100).toFixed(2);
+            const div = document.createElement("div");
+            div.className = "card";
+            div.innerHTML = `<h3>${p.nickname}</h3>
+                             <p>$${priceUSD} / month</p>
+                             <p>Recurring monthly subscription.</p>
+                             <button onclick="startCheckout('${key}')">Subscribe to ${p.nickname}</button>`;
+            container.appendChild(div);
+        });
+        document.getElementById("subs_info").innerText = "Stripe test checkout (monthly subscriptions)";
+    } catch (err) {
+        document.getElementById("subs_info").innerText = "Failed to load Stripe config: " + err;
+    }
+}
+loadStripeConfig();
+
+async function startCheckout(plan) {
+    try {
+        const resp = await fetch("/create-checkout-session", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({plan}),
+            credentials: 'include'
+        });
+        const data = await resp.json();
+        if (data.error) {
+            alert("Error creating checkout session: " + data.error);
+            return;
+        }
+        if (data.url) {
+            window.location = data.url;
+            return;
+        }
+        if (data.id && stripePublishableKey) {
+            const stripe = Stripe(stripePublishableKey);
+            const {error} = await stripe.redirectToCheckout({sessionId: data.id});
+            if (error) alert(error.message);
+            return;
+        }
+        alert("Could not initialize checkout");
+    } catch (err) {
+        alert("Error: " + err);
     }
 }
 </script>
