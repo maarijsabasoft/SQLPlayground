@@ -39,8 +39,8 @@ else:
 # OAuth Configuration
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "836571438073-09ml50l2hccddj99mbsqc2dtbg3h8l6b.apps.googleusercontent.com")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "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")
-GITHUB_CLIENT_ID = os.environ.get("GITHUB_CLIENT_ID", "your-github-client-id")
-GITHUB_CLIENT_SECRET = os.environ.get("GITHUB_CLIENT_SECRET", "your-github-client-secret")
+GITHUB_CLIENT_ID = os.environ.get("GITHUB_CLIENT_ID", "Ov23li8WI3HV8rkiYk49")
+GITHUB_CLIENT_SECRET = os.environ.get("GITHUB_CLIENT_SECRET", "6bf30dc6d5e8a190143337b3559443d821731e7e")
 
 DB_FOLDER = "databases"
 os.makedirs(DB_FOLDER, exist_ok=True)
@@ -61,8 +61,8 @@ google = oauth.register(
 
 github = oauth.register(
     name='github',
-    client_id='Ov23liJ6E1lObYC6fPOB',
-    client_secret='e259922033f1d826b9866ba05a2ef0a14dd566f8',
+    client_id='Ov23li8WI3HV8rkiYk49',
+    client_secret='6bf30dc6d5e8a190143337b3559443d821731e7e',
     authorize_url='https://github.com/login/oauth/authorize',
     access_token_url='https://github.com/login/oauth/access_token',
     client_kwargs={'scope': 'user:email'},
