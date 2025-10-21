@@ -22,9 +22,9 @@ logger = logging.getLogger(__name__)
 # ---------- Config & Keys ----------
 GROQ_API_KEY = os.environ.get(
     "GROQ_API_KEY",
-    "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"
+    "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"
 )
-if GROQ_API_KEY == "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":
+if GROQ_API_KEY == "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":
     print("Warning: Set your GROQ_API_KEY environment variable!")
 groq_client = Groq(api_key=GROQ_API_KEY)
 
@@ -54,7 +54,7 @@ oauth = OAuth(app)
 google = oauth.register(
     name='google',
     client_id='836571438073-g4foa0u929gskfrqhbi7q7omrl7pif2t.apps.googleusercontent.com',
-    client_secret='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',
+    client_secret='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',
     server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
     client_kwargs={'scope': 'openid email profile'}
 )
@@ -97,7 +97,7 @@ init_user_db()
 
 # ---------- Create demo.db ----------
 def create_demo_db():
-    db_path = os.path.join(DB_FOLDER, "demo.db")
+    db_path = os.path.join(DB_FOLDER, "")
     with sqlite3.connect(db_path) as conn:
         conn.execute("PRAGMA journal_mode=WAL;")
         conn.execute("PRAGMA case_sensitive_like = OFF;")
@@ -518,7 +518,7 @@ def user_info():
 @app.route("/public_databases", methods=["GET"])
 def public_databases():
     """List all databases including public ones like demo.db with a placeholder option"""
-    public_dbs = ["demo.db"]
+    public_dbs = [""]
     try:
         if current_user.is_authenticated:
             with sqlite3.connect(USER_DB) as conn:
@@ -538,7 +538,7 @@ def public_databases():
 def download_db(db_name):
     """Allow downloading a .db file"""
     try:
-        is_public = db_name == "demo.db"
+        is_public = db_name == ""
         if not is_public:
             with sqlite3.connect(USER_DB) as conn:
                 cursor = conn.cursor()
@@ -715,7 +715,7 @@ def schema():
     if db_name == "Select a database":
         return jsonify({"error": "Please select a valid database"}), 400
     try:
-        is_public = db_name == "demo.db"
+        is_public = db_name == ""
         if not is_public:
             if not current_user.is_authenticated:
                 return jsonify({"error": "Login required for this database"}), 401
@@ -747,7 +747,7 @@ def db_description():
     if db_name == "Select a database":
         return jsonify({"error": "Please select a valid database"}), 400
     try:
-        is_public = db_name == "demo.db"
+        is_public = db_name == ""
         if not is_public:
             if not current_user.is_authenticated:
                 return jsonify({"error": "Login required for this database"}), 401
@@ -803,7 +803,7 @@ def ask():
     if db_name == "Select a database":
         return jsonify({"error": "Please select a valid database"}), 400
     try:
-        is_public = db_name == "demo.db"
+        is_public = db_name == ""
         tier = "free" if not current_user.is_authenticated else current_user.subscription_tier
         if not is_public and tier not in ["standard", "premium"]:
             return jsonify({"error": "Standard or Premium subscription required for querying private databases"}), 403
@@ -841,7 +841,7 @@ def visualize():
     if db_name == "Select a database":
         return jsonify({"error": "Please select a valid database"}), 400
     try:
-        is_public = db_name == "demo.db"
+        is_public = db_name == ""
         if not current_user.is_authenticated:
             return jsonify({"error": "Login required for visualization"}), 401
         if current_user.subscription_tier != "premium":
@@ -971,7 +971,7 @@ def add_row():
     if db_name == "Select a database":
         return jsonify({"error": "Please select a valid database"}), 400
     try:
-        if db_name == "demo.db":
+        if db_name == "":
             return jsonify({"error": "Cannot modify demo.db rows"}), 403
         with sqlite3.connect(USER_DB) as conn:
             cursor = conn.cursor()
@@ -1019,7 +1019,7 @@ def delete_row():
     if db_name == "Select a database":
         return jsonify({"error": "Please select a valid database"}), 400
     try:
-        if db_name == "demo.db":
+        if db_name == "":
             return jsonify({"error": "Cannot modify demo.db rows"}), 403
         with sqlite3.connect(USER_DB) as conn:
             cursor = conn.cursor()
@@ -1111,7 +1111,7 @@ def suggested_queries():
     if db_name == "Select a database":
         return jsonify({"error": "Please select a valid database"}), 400
     try:
-        is_public = db_name == "demo.db"
+        is_public = db_name == ""
         tier = "free" if not current_user.is_authenticated else current_user.subscription_tier
         if not is_public and tier not in ["standard", "premium"]:
             return jsonify({"error": "Standard or Premium subscription required for suggested queries on private databases"}), 403
