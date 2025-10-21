@@ -345,7 +345,7 @@ def google_login():
     except Exception as e:
         logger.error(f"Google login initiation failed: {str(e)}")
         flash(f"Google login initiation failed: {str(e)}", "error")
-        return redirect(url_for("login"))
+        return redirect(url_for("auth"))
 
 import jwt
 
@@ -362,7 +362,7 @@ def google_auth_callback():
         except AuthlibBaseError as token_error:
             logger.error(f"Failed to obtain access token: {str(token_error)}")
             flash(f"Google login failed: {str(token_error)}", "error")
-            return redirect(url_for("login"))
+            return redirect(url_for("auth"))
 
         # Step 2: Get user info
         user_info = None
