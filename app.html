@@ -1465,55 +1465,36 @@ async function loadSchema() {
         document.getElementById("suggested_queries").innerHTML = "";
     }
 }
-
 async function askQuery() {
     if (!['standard', 'premium'].includes(userTier)) {
-        showPopup(translations[currentLanguage].query_access_denied.replace('{tier}', userTier));
+        showPopup('You are on the ' + userTier + ' tier and cannot access the Query feature. Please subscribe to a higher tier.');
         return;
     }
     const db = document.getElementById("db_query_select").value;
     const question = document.getElementById("question").value;
-    if (!db || !question) {
-        document.getElementById("results").innerText = translations[currentLanguage].select_db_error || "Please select a database and enter a question";
+    const resp = await fetch("/ask", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name: db, question}), credentials: 'include'});
+    const data = await resp.json();
+    if (data.error) {
+        alert(data.error);
         return;
     }
-    try {
-        const resp = await fetch("/ask", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({db_name: db, question}),
-            credentials: 'include'
-        });
-        if (!resp.ok) {
-            throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
-        }
-        const data = await resp.json();
-        const div = document.getElementById("results");
-        if (data.error || (data.result && data.result.error)) {
-            div.innerText = data.error || data.result.error;
-            document.getElementById("sql_display").innerText = "";
-            return;
-        }
-        if (!data.result || !data.result.columns || !data.result.rows) {
-            throw new Error("Invalid response format from server");
-        }
-        document.getElementById("sql_display").innerText = data.result.sql;
-        let html = "<table><thead><tr>";
-        data.result.columns.forEach(c => html += `<th>${c}</th>`);
-        html += "</tr></thead><tbody>";
-        data.result.rows.forEach(r => {
-            html += "<tr>";
-            data.result.columns.forEach(c => html += `<td>${r[c]}</td>`);
-            html += "</tr>";
-        });
-        html += "</tbody></table>";
-        div.innerHTML = html;
-    } catch (err) {
-        document.getElementById("results").innerText = translations[currentLanguage].table_load_error + ": " + err;
-        document.getElementById("sql_display").innerText = "";
+    document.getElementById("sql_display").innerText = data.sql;
+    const div = document.getElementById("results");
+    if (data.result.error) {
+        div.innerText = data.result.error;
+        return;
     }
+    let html = "<table><thead><tr>";
+    data.result.columns.forEach(c => html += `<th>${c}</th>`);
+    html += "</tr></thead><tbody>";
+    data.result.rows.forEach(r => {
+        html += "<tr>";
+        data.result.columns.forEach(c => html += `<td>${r[c]}</td>`);
+        html += "</tr>";
+    });
+    html += "</tbody></table>";
+    div.innerHTML = html;
 }
-
 async function loadTables() {
     const db = document.getElementById("db_manage_select").value;
     if (!db) {
