@@ -431,7 +431,7 @@ pre {
         </div>
     </div>
 </div>
-<script>
+<!-- <script>
 let userTier = 'free';
 let vizChart;
 let currentLanguage = 'en';
@@ -1787,6 +1787,512 @@ document.addEventListener("DOMContentLoaded", () => {
     updateSubscriptionsContent();
     checkLogin(); // Trigger login check to initialize app
 });
+</script> -->
+
+    <script>
+let userTier = 'free';
+async function checkLogin() {
+    try {
+        const resp = await fetch("/user_info", {credentials: 'include'});
+        const data = await resp.json();
+        if (data.error) {
+            document.getElementById('landing').style.display = 'flex';
+            document.getElementById('app').style.display = 'none';
+            // document.getElementById('profile-container').style.display = 'none';
+            // document.getElementById('logout').style.display = 'none';
+        } else {
+            userTier = data.tier;
+            document.getElementById('landing').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            // document.getElementById('profile-container').style.display = 'block';
+            loadDatabases();
+            document.querySelectorAll('.tablinks')[0].click();
+        }
+    } catch (err) {
+        document.getElementById('auth-message').innerText = 'Error checking login status: ' + err;
+    }
+}
+checkLogin();
+async function signup() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    if (!email || !password) {
+        document.getElementById('auth-message').innerText = 'Please enter both email and password';
+        return;
+    }
+    try {
+        const resp = await fetch('/signup', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({email, password}),
+            credentials: 'include'
+        });
+        const data = await resp.json();
+        document.getElementById('auth-message').innerText = data.error ? data.error : 'Signed up successfully!';
+        if (!data.error) {
+            userTier = data.tier;
+            document.getElementById('landing').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            // document.getElementById('profile-container').style.display = 'block';
+            // document.getElementById('logout').style.display = 'none';
+            loadDatabases();
+            document.querySelectorAll('.tablinks')[0].click();
+        }
+    } catch (err) {
+        document.getElementById('auth-message').innerText = 'Error during signup: ' + err;
+    }
+}
+async function login() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    if (!email || !password) {
+        document.getElementById('auth-message').innerText = 'Please enter both email and password';
+        return;
+    }
+    try {
+        const resp = await fetch('/login', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({email, password}),
+            credentials: 'include'
+        });
+        const data = await resp.json();
+        document.getElementById('auth-message').innerText = data.error ? data.error : 'Logged in successfully!';
+        if (!data.error) {
+            userTier = data.tier;
+            document.getElementById('landing').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            // document.getElementById('profile-container').style.display = 'block';
+            // document.getElementById('logout').style.display = 'none';
+            loadDatabases();
+            document.querySelectorAll('.tablinks')[0].click();
+        }
+    } catch (err) {
+        document.getElementById('auth-message').innerText = 'Error during login: ' + err;
+    }
+}
+function checkTabAccess(tabName) {
+    const accessRules = {
+        'Databases': ['free', 'basic', 'standard', 'premium'],
+        'Query': ['standard', 'premium'],
+        'Manage': ['basic', 'standard', 'premium'],
+        'CreateDB': ['free', 'basic', 'standard', 'premium'],
+        'ConnectDB': ['free', 'basic', 'standard', 'premium'],
+        'Visualization': ['premium'],
+        'Subscriptions': ['free', 'basic', 'standard', 'premium']
+    };
+    if (!accessRules[tabName].includes(userTier)) {
+        showPopup(`You are on the ${userTier} tier and cannot access the ${tabName} feature. Please subscribe to a higher tier.`);
+        return;
+    }
+    openTab({currentTarget: document.querySelector(`button[onclick*="${tabName}"]`)}, tabName);
+}
+function showPopup(message) {
+    document.getElementById('popup-message').innerText = message;
+    document.getElementById('popup').style.display = 'block';
+    document.getElementById('overlay').style.display = 'block';
+}
+function closePopup() {
+    document.getElementById('popup').style.display = 'none';
+    document.getElementById('overlay').style.display = 'none';
+}
+function goToSubscriptions() {
+    closePopup();
+    openTab({currentTarget: document.querySelector(`button[onclick*='Subscriptions']`)}, 'Subscriptions');
+}
+document.getElementById('theme-toggle').addEventListener('click', () => {
+    if (document.body.classList.contains('theme-dark')) {
+        document.body.classList.remove('theme-dark');
+        document.body.classList.add('theme-light');
+        document.getElementById('theme-toggle').innerHTML = '🌙';
+    } else {
+        document.body.classList.remove('theme-light');
+        document.body.classList.add('theme-dark');
+        document.getElementById('theme-toggle').innerHTML = '☀️';
+    }
+});
+function showApp() {
+    document.getElementById('landing').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    checkTabAccess('Databases');
+}
+function openTab(evt, tabName) {
+    var i, tabcontent = document.getElementsByClassName("tabcontent"), tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tabcontent.length; i++) tabcontent[i].style.display = "none";
+    for (i = 0; i < tablinks.length; i++) tablinks[i].className = tablinks[i].className.replace(" active", "");
+    document.getElementById(tabName).style.display = "block";
+    evt.currentTarget.className += " active";
+}
+document.getElementById("connect_db_type").addEventListener("change", function() {
+    const type = this.value;
+    document.getElementById("connect_db_file").style.display = type === "sqlite" ? "block" : "none";
+    ["connect_host", "connect_port", "connect_database", "connect_user", "connect_password"].forEach(id => {
+        document.getElementById(id).style.display = type !== "sqlite" ? "block" : "none";
+    });
+});
+async function connectDB() {
+    const type = document.getElementById("connect_db_type").value;
+    if (type === "sqlite") {
+        const fileInput = document.getElementById("connect_db_file");
+        if (!fileInput.files.length) {
+            alert("Please select a .db file");
+            return;
+        }
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+        try {
+            const resp = await fetch("/upload_db", {
+                method: "POST",
+                body: formData,
+                credentials: 'include'
+            });
+            const data = await resp.json();
+            document.getElementById("connect_db_result").innerText = data.error ? data.error : JSON.stringify(data.schema, null, 2);
+            if (!data.error) {
+                alert("Database uploaded successfully!");
+                loadDatabases();
+            }
+        } catch (err) {
+            document.getElementById("connect_db_result").innerText = "Error uploading database: " + err;
+        }
+    } else {
+        const payload = {
+            db_type: type,
+            host: document.getElementById("connect_host").value,
+            port: document.getElementById("connect_port").value,
+            database: document.getElementById("connect_database").value,
+            db_name: document.getElementById("connect_database").value,
+            user: document.getElementById("connect_user").value,
+            password: document.getElementById("connect_password").value
+        };
+        try {
+            const resp = await fetch("/connect_db", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(payload),
+                credentials: 'include'
+            });
+            const data = await resp.json();
+            document.getElementById("connect_db_result").innerText = data.error ? data.error : JSON.stringify(data.schema, null, 2);
+            if (!data.error) {
+                alert("Database connected successfully!");
+                loadDatabases();
+            }
+        } catch (err) {
+            document.getElementById("connect_db_result").innerText = "Error connecting database: " + err;
+        }
+    }
+}
+async function loadDatabases() {
+    const resp = await fetch("/public_databases", {credentials: 'include'});
+    const data = await resp.json();
+    if (data.error) return;
+    ["db_select", "db_query_select", "db_manage_select", "viz_db_select"].forEach(id => {
+        const sel = document.getElementById(id);
+        sel.innerHTML = "";
+        data.databases.forEach(db => {
+            let o = document.createElement("option");
+            o.value = db;
+            o.text = db;
+            sel.appendChild(o);
+        });
+    });
+    loadTables();
+}
+async function loadSchema() {
+    const db = document.getElementById("db_select").value;
+    const resp = await fetch("/schema", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name: db}), credentials: 'include'});
+    const data = await resp.json();
+    document.getElementById("schema_view").innerText = data.error ? data.error : JSON.stringify(data.schema, null, 2);
+}
+async function loadDBDescription() {
+    const db = document.getElementById("db_query_select").value;
+    if (!db) return;
+    const resp = await fetch("/db_description", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name: db}), credentials: 'include'});
+    const data = await resp.json();
+    document.getElementById("db_description").innerText = data.error ? data.error : data.description;
+
+    // Load suggested queries
+    const s_resp = await fetch("/suggested_queries", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name: db}), credentials: 'include'});
+    const s_data = await s_resp.json();
+    const sug_div = document.getElementById("suggested_queries");
+    sug_div.innerHTML = '';
+    if (s_data.error) {
+        return;
+    }
+    s_data.queries.forEach(q => {
+        const btn = document.createElement("button");
+        btn.innerText = q;
+        btn.style.flex = "1 1 auto";
+        btn.style.maxWidth = "30%";
+        btn.onclick = () => { document.getElementById("question").value = q; };
+        sug_div.appendChild(btn);
+    });
+}
+async function askQuery() {
+    if (!['standard', 'premium'].includes(userTier)) {
+        showPopup('You are on the ' + userTier + ' tier and cannot access the Query feature. Please subscribe to a higher tier.');
+        return;
+    }
+    const db = document.getElementById("db_query_select").value;
+    const question = document.getElementById("question").value;
+    const resp = await fetch("/ask", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name: db, question}), credentials: 'include'});
+    const data = await resp.json();
+    if (data.error) {
+        alert(data.error);
+        return;
+    }
+    document.getElementById("sql_display").innerText = data.sql;
+    const div = document.getElementById("results");
+    if (data.result.error) {
+        div.innerText = data.result.error;
+        return;
+    }
+    let html = "<table><thead><tr>";
+    data.result.columns.forEach(c => html += `<th>${c}</th>`);
+    html += "</tr></thead><tbody>";
+    data.result.rows.forEach(r => {
+        html += "<tr>";
+        data.result.columns.forEach(c => html += `<td>${r[c]}</td>`);
+        html += "</tr>";
+    });
+    html += "</tbody></table>";
+    div.innerHTML = html;
+}
+async function createDB() {
+    if (!['free', 'basic', 'standard', 'premium'].includes(userTier)) {
+        showPopup('You are on the ' + userTier + ' tier and cannot access the Create DB feature. Please subscribe to a higher tier.');
+        return;
+    }
+    const db_name = document.getElementById("new_db_name").value;
+    const prompt = document.getElementById("db_prompt").value;
+    if (!db_name || !prompt) {
+        alert("Provide database name and prompt");
+        return;
+    }
+    const resp = await fetch("/create_db", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name, prompt}), credentials: 'include'});
+    const data = await resp.json();
+    document.getElementById("create_db_result").innerText = data.error ? data.error : "Database Created!\n" + data.sql_schema;
+    loadDatabases();
+}
+async function loadTables() {
+    const db = document.getElementById("db_manage_select").value;
+    const resp = await fetch("/schema", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name: db}), credentials: 'include'});
+    const data = await resp.json();
+    const sel = document.getElementById("table_select");
+    sel.innerHTML = '';
+    if (data.schema) {
+        Object.keys(data.schema).forEach(t => {
+            let o = document.createElement("option");
+            o.value = t;
+            o.text = t;
+            o.selected = true;
+            sel.appendChild(o);
+        });
+    }
+    updateRowPlaceholder();
+    loadTableRows();
+}
+function updateRowPlaceholder() {
+    const db = document.getElementById("db_manage_select").value;
+    const table = document.getElementById("table_select").value;
+    if (!db || !table) return;
+    fetch("/schema", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({db_name: db}),
+        credentials: 'include'
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.schema && data.schema[table.toLowerCase()]) {
+            document.getElementById("add_row_values").placeholder =
+                "Write all values according to number of columns separated by commas e.g if cols are id, name and age then add like 1,abc,22";
+        }
+    });
+}
+async function loadTableRows() {
+    if (!['basic', 'standard', 'premium'].includes(userTier)) {
+        showPopup('You are on the ' + userTier + ' tier and cannot access the Manage Rows feature. Please subscribe to a higher tier.');
+        return;
+    }
+    const db = document.getElementById("db_manage_select").value;
+    const table = document.getElementById("table_select").value;
+    const resp = await fetch("/ask", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({db_name: db, question: `SELECT * FROM ${table}`}),
+        credentials: 'include'
+    });
+    const data = await resp.json();
+    const div = document.getElementById("table_editor");
+    if (data.result.error) {
+        div.innerText = data.result.error;
+        return;
+    }
+    let html = "<table><thead><tr>";
+    data.result.columns.forEach(c => html += `<th>${c}</th>`);
+    html += "<th>Actions</th></tr></thead><tbody>";
+    const keyCol = data.result.columns[0];
+    data.result.rows.forEach(r => {
+        html += "<tr>";
+        data.result.columns.forEach(c => html += `<td>${r[c]}</td>`);
+        html += `<td><button onclick='deleteRow("${db}","${table}","${keyCol}=${r[keyCol]}")'>Delete</button></td>`;
+        html += "</tr>";
+    });
+    html += "</tbody></table>";
+    div.innerHTML = html;
+}
+async function addRow() {
+    if (!['basic', 'standard', 'premium'].includes(userTier)) {
+        showPopup('You are on the ' + userTier + ' tier and cannot access the Manage Rows feature. Please subscribe to a higher tier.');
+        return;
+    }
+    const db = document.getElementById("db_manage_select").value;
+    const table = document.getElementById("table_select").value;
+    const values = document.getElementById("add_row_values").value;
+    const resp = await fetch("/add_row", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name: db, table, values}), credentials: 'include'});
+    const data = await resp.json();
+    if (data.error) {
+        alert(data.error);
+        return;
+    }
+    alert("Row added!");
+    loadTableRows();
+}
+async function deleteRow(db, table, condition) {
+    if (!['basic', 'standard', 'premium'].includes(userTier)) {
+        showPopup('You are on the ' + userTier + ' tier and cannot access the Manage Rows feature. Please subscribe to a higher tier.');
+        return;
+    }
+    const resp = await fetch("/delete_row", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name: db, table, condition}), credentials: 'include'});
+    const data = await resp.json();
+    if (data.error) {
+        alert(data.error);
+        return;
+    }
+    alert("Row deleted!");
+    loadTableRows();
+}
+let vizChart;
+async function generateVisualization() {
+    if (userTier !== 'premium') {
+        showPopup('You are on the ' + userTier + ' tier and cannot access the Visualization feature. Please subscribe to the Premium tier.');
+        return;
+    }
+    const db = document.getElementById("viz_db_select").value;
+    const prompt = document.getElementById("viz_prompt").value;
+    if (!db || !prompt) {
+        alert("Select DB and enter a prompt");
+        return;
+    }
+    const resp = await fetch("/visualize", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({db_name: db, prompt}),
+        credentials: 'include'
+    });
+    const data = await resp.json();
+    if (data.error) {
+        alert(data.error);
+        return;
+    }
+    document.getElementById("viz_sql").innerText = data.sql;
+    document.getElementById("viz_summary").innerText = data.summary;
+    const cols = data.columns;
+    const rows = data.rows;
+    if (cols.length < 2) {
+        alert("Need at least two columns for a chart");
+        return;
+    }
+    const labels = rows.map(r => r[cols[0]]);
+    const values = rows.map(r => Number(r[cols[1]]) || 0);
+    const isLight = document.body.classList.contains('theme-light');
+    if (vizChart) vizChart.destroy();
+    const ctx = document.getElementById("viz_chart").getContext("2d");
+    vizChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: cols[1],
+                data: values,
+                backgroundColor: isLight ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)',
+                borderColor: isLight ? 'rgba(0, 0, 0, 0.5)' : 'rgba(255, 255, 255, 0.5)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true, labels: {color: isLight ? '#333333' : '#e0e0e0'} },
+                title: { display: true, text: prompt, color: isLight ? '#333333' : '#e0e0e0', font: {size: 18} }
+            },
+            scales: {
+                x: { ticks: {color: isLight ? '#333333' : '#e0e0e0'} },
+                y: { ticks: {color: isLight ? '#333333' : '#e0e0e0'}, beginAtZero: true }
+            }
+        }
+    });
+}
+let stripePublishableKey = "";
+async function loadStripeConfig() {
+    try {
+        const r = await fetch("/stripe_config", {credentials: 'include'});
+        const data = await r.json();
+        stripePublishableKey = data.publishableKey || "";
+        const plans = data.plans || {
+            basic: {nickname: "Basic", amount_cents: 1000},
+            standard: {nickname: "Standard", amount_cents: 1500},
+            premium: {nickname: "Premium", amount_cents: 2500}
+        };
+        const container = document.getElementById("subscriptions_container");
+        container.innerHTML = "";
+        Object.keys(plans).forEach(key => {
+            const p = plans[key];
+            const priceUSD = (p.amount_cents / 100).toFixed(2);
+            const div = document.createElement("div");
+            div.className = "card";
+            div.innerHTML = `<h3>${p.nickname}</h3>
+                             <p>$${priceUSD} / month</p>
+                             <p>Recurring monthly subscription.</p>
+                             <button onclick="startCheckout('${key}')">Subscribe to ${p.nickname}</button>`;
+            container.appendChild(div);
+        });
+        document.getElementById("subs_info").innerText = "Stripe test checkout (monthly subscriptions)";
+    } catch (err) {
+        document.getElementById("subs_info").innerText = "Failed to load Stripe config: " + err;
+    }
+}
+loadStripeConfig();
+async function startCheckout(plan) {
+    try {
+        const resp = await fetch("/create-checkout-session", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({plan}),
+            credentials: 'include'
+        });
+        const data = await resp.json();
+        if (data.error) {
+            alert("Error creating checkout session: " + data.error);
+            return;
+        }
+        if (data.url) {
+            window.location = data.url;
+            return;
+        }
+        if (data.id && stripePublishableKey) {
+            const stripe = Stripe(stripePublishableKey);
+            const {error} = await stripe.redirectToCheckout({sessionId: data.id});
+            if (error) alert(error.message);
+            return;
+        }
+        alert("Could not initialize checkout");
+    } catch (err) {
+        alert("Error: " + err);
+    }
+}
 </script>
 </body>
 </html>
