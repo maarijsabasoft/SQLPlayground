@@ -1168,6 +1168,16 @@ const translations = {
         lang_italian: "Italiano"
     }
 };
+function showErrorMessage(message) {
+    const appDiv = document.getElementById('app');
+    appDiv.style.display = 'block'; // Ensure app is visible
+    appDiv.innerHTML = `<div style="text-align: center; color: var(--danger); padding: 20px;">
+        <h2>${translations[currentLanguage].error || 'Error'}</h2>
+        <p>${message}</p>
+        <button onclick="window.location.reload()">${translations[currentLanguage].try_again || 'Try Again'}</button>
+    </div>`;
+}
+
 async function checkLogin() {
     try {
         const resp = await fetch("/user_info", {credentials: 'include'});
