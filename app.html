@@ -1855,12 +1855,11 @@ async function startCheckout(plan) {
         alert(translations[currentLanguage].error + ": " + err);
     }
 }
-
 document.addEventListener("DOMContentLoaded", () => {
     changeLanguage('en'); // Initialize with English
     updateSubscriptionsContent();
-// some JS code
-}
+    // some JS code
+}); // ✅ closes both the function and the addEventListener
 </script>
 </body>
 </html>
