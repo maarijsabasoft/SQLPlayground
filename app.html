@@ -1621,84 +1621,36 @@ async function loadTableRows() {
         document.getElementById("table_editor").innerText = translations[currentLanguage].table_load_error + ": " + err;
     }
 }
-
 async function addRow() {
     if (!['basic', 'standard', 'premium'].includes(userTier)) {
-        showPopup(translations[currentLanguage].manage_rows_access_denied.replace('{tier}', userTier));
+        showPopup('You are on the ' + userTier + ' tier and cannot access the Manage Rows feature. Please subscribe to a higher tier.');
         return;
     }
     const db = document.getElementById("db_manage_select").value;
     const table = document.getElementById("table_select").value;
     const values = document.getElementById("add_row_values").value;
-    if (!db || !table || !values) {
-        alert(translations[currentLanguage].select_db_table_error || "Please select a database, table, and enter values");
+    const resp = await fetch("/add_row", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name: db, table, values}), credentials: 'include'});
+    const data = await resp.json();
+    if (data.error) {
+        alert(data.error);
         return;
     }
-    try {
-        if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(table)) {
-            throw new Error("Invalid table name");
-        }
-        const resp = await fetch("/schema", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({db_name: db}),
-            credentials: 'include'
-        });
-        if (!resp.ok) {
-            throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
-        }
-        const data = await resp.json();
-        if (data.error || !data.schema || !data.schema[table]) {
-            throw new Error(data.error || "Table schema not found");
-        }
-        const cols = Object.keys(data.schema[table]).join(",");
-        const resp2 = await fetch("/ask", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({db_name: db, question: `INSERT INTO ${table} (${cols}) VALUES (${values})`}),
-            credentials: 'include'
-        });
-        if (!resp2.ok) {
-            throw new Error(`HTTP ${resp2.status}: ${resp2.statusText}`);
-        }
-        const data2 = await resp2.json();
-        if (data2.error || (data2.result && data2.result.error)) {
-            throw new Error(data2.error || data2.result.error);
-        }
-        alert(translations[currentLanguage].row_added);
-        loadTableRows();
-    } catch (err) {
-        alert(translations[currentLanguage].error + ": " + err);
-    }
+    alert("Row added!");
+    loadTableRows();
 }
-
 async function deleteRow(db, table, condition) {
     if (!['basic', 'standard', 'premium'].includes(userTier)) {
-        showPopup(translations[currentLanguage].manage_rows_access_denied.replace('{tier}', userTier));
+        showPopup('You are on the ' + userTier + ' tier and cannot access the Manage Rows feature. Please subscribe to a higher tier.');
         return;
     }
-    try {
-        if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(table)) {
-            throw new Error("Invalid table name");
-        }
-        const resp = await fetch("/ask", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({db_name: db, question: `DELETE FROM ${table} WHERE ${condition}`}),
-            credentials: 'include'
-        });
-        if (!resp.ok) {
-            throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
-        }
-        const data = await resp.json();
-        if (data.error || (data.result && data.result.error)) {
-            throw new Error(data.error || data.result.error);
-        }
-        alert(translations[currentLanguage].row_deleted);
-        loadTableRows();
-    } catch (err) {
-        alert(translations[currentLanguage].error + ": " + err);
+    const resp = await fetch("/delete_row", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name: db, table, condition}), credentials: 'include'});
+    const data = await resp.json();
+    if (data.error) {
+        alert(data.error);
+        return;
     }
+    alert("Row deleted!");
+    loadTableRows();
 }
 
 async function createDB() {
