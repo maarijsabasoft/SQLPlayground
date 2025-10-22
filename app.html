@@ -290,7 +290,7 @@ pre {
     <button onclick="closePopup()">Close</button>
 </div>
 
-<div id="landing">
+<!-- <div id="landing"> -->
 
 <div id="app">
     <header>
@@ -390,7 +390,7 @@ pre {
         <p style="margin-top:14px;color:var(--gray);">All plans are monthly recurring. Billing handled by Stripe (test mode).</p>
     </div>
 </div>
-</div>
+<!-- </div> -->
 <script>
 let userTier = 'free';
 let vizChart;
@@ -400,11 +400,11 @@ async function checkLogin() {
         const resp = await fetch("/user_info", {credentials: 'include'});
         const data = await resp.json();
         if (data.error) {
-            document.getElementById('landing').style.display = 'flex';
+            // document.getElementById('landing').style.display = 'flex';
             document.getElementById('app').style.display = 'none';
         } else {
             userTier = data.tier;
-            document.getElementById('landing').style.display = 'none';
+            // document.getElementById('landing').style.display = 'none';
             document.getElementById('app').style.display = 'block';
             loadDatabases();
             document.querySelectorAll('.tablinks')[0].click();
@@ -417,7 +417,7 @@ async function checkLogin() {
 checkLogin();
 
 function showApp() {
-    document.getElementById('landing').style.display = 'none';
+    // document.getElementById('landing').style.display = 'none';
     document.getElementById('app').style.display = 'block';
     checkTabAccess('Databases');
 }
