@@ -376,7 +376,7 @@ def google_auth_callback():
                 user = (user_id, email, "free")
             login_user(User(user[0], user[1], user[2]))
         flash("Logged in successfully via Google!", "success")
-        return redirect(url_for("app_page"))
+        return redirect(url_for("tool"))
     except Exception as e:
         logger.error(f"Google login failed: {str(e)}")
         flash(f"Google login failed: {str(e)}", "error")
@@ -410,7 +410,7 @@ def github_auth_callback():
             if resp_emails.status_code != 200:
                 logger.error(f"Failed to retrieve emails: {resp_emails.status_code} {resp_emails.text}")
                 flash(f"GitHub login failed: Unable to retrieve email.", "error")
-                return redirect(url_for("auth_page"))
+                return redirect(url_for("tool"))
             emails = resp_emails.json()
             email = next((e['email'] for e in emails if e['primary'] and e['verified']), None)
             if not email:
