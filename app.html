@@ -1862,8 +1862,8 @@ async function startCheckout(plan) {
 document.addEventListener("DOMContentLoaded", () => {
     changeLanguage('en'); // Initialize with English
     updateSubscriptionsContent();
-    // some JS code
-}); // ✅ closes both the function and the addEventListener
+    checkLogin(); // Trigger login check to initialize app
+});
 </script>
-
 </body>
+</html>
