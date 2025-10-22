@@ -1654,35 +1654,54 @@ async function generateVisualization() {
         showPopup('You are on the ' + userTier + ' tier and cannot access the Visualization feature. Please subscribe to the Premium tier.');
         return;
     }
+
     const db = document.getElementById("viz_db_select").value;
     const prompt = document.getElementById("viz_prompt").value;
+
     if (!db || !prompt) {
         alert("Select DB and enter a prompt");
         return;
     }
+
     const resp = await fetch("/visualize", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({db_name: db, prompt}),
+        body: JSON.stringify({ db_name: db, prompt }),
         credentials: 'include'
     });
+
     const data = await resp.json();
     if (data.error) {
         alert(data.error);
         return;
     }
+
     document.getElementById("viz_sql").innerText = data.sql;
     document.getElementById("viz_summary").innerText = data.summary;
+
     const cols = data.columns;
     const rows = data.rows;
+
     if (cols.length < 2) {
         alert("Need at least two columns for a chart");
         return;
     }
+
     const labels = rows.map(r => r[cols[0]]);
     const values = rows.map(r => Number(r[cols[1]]) || 0);
     const isLight = document.body.classList.contains('theme-light');
+
+    // 🎨 Vibrant colors for colorful look on white bg
+    const vibrantColors = [
+        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+        '#9966FF', '#FF9F40', '#00A36C', '#E57373',
+        '#64B5F6', '#FFD54F', '#81C784', '#BA68C8'
+    ];
+    const backgroundColors = labels.map((_, i) => vibrantColors[i % vibrantColors.length]);
+    const borderColors = labels.map((_, i) => vibrantColors[i % vibrantColors.length]);
+
     if (vizChart) vizChart.destroy();
+
     const ctx = document.getElementById("viz_chart").getContext("2d");
     vizChart = new Chart(ctx, {
         type: 'bar',
@@ -1691,20 +1710,31 @@ async function generateVisualization() {
             datasets: [{
                 label: cols[1],
                 data: values,
-                backgroundColor: isLight ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)',
-                borderColor: isLight ? 'rgba(0, 0, 0, 0.5)' : 'rgba(255, 255, 255, 0.5)',
+                backgroundColor: backgroundColors,
+                borderColor: borderColors,
                 borderWidth: 1
             }]
         },
         options: {
             responsive: true,
             plugins: {
-                legend: { display: true, labels: {color: isLight ? '#333333' : '#e0e0e0'} },
-                title: { display: true, text: prompt, color: isLight ? '#333333' : '#e0e0e0', font: {size: 18} }
+                legend: {
+                    display: true,
+                    labels: { color: isLight ? '#333333' : '#e0e0e0' }
+                },
+                title: {
+                    display: true,
+                    text: prompt,
+                    color: isLight ? '#333333' : '#e0e0e0',
+                    font: { size: 18 }
+                }
             },
             scales: {
-                x: { ticks: {color: isLight ? '#333333' : '#e0e0e0'} },
-                y: { ticks: {color: isLight ? '#333333' : '#e0e0e0'}, beginAtZero: true }
+                x: { ticks: { color: isLight ? '#333333' : '#e0e0e0' } },
+                y: {
+                    ticks: { color: isLight ? '#333333' : '#e0e0e0' },
+                    beginAtZero: true
+                }
             }
         }
     });
