@@ -1417,27 +1417,7 @@ async function loadSchema() {
     }
 }
 
-async function loadDBDescription() {
-    const db = document.getElementById("db_query_select").value;
-    if (!db) return;
-    try {
-        const resp = await fetch("/db_description", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({db_name: db}),
-            credentials: 'include'
-        });
-        if (!resp.ok) {
-            throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
-        }
-        const data = await resp.json();
-        document.getElementById("db_description").innerText = data.error ? data.error : data.description;
-        const s_resp = await fetch("/suggested_queries", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({db_name: db}),
-            credentials: 'include'
-        });
+
        async function loadDBDescription() {
     const db = document.getElementById("db_query_select").value;
     if (!db) {
