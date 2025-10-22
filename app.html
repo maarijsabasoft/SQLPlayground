@@ -341,13 +341,16 @@ pre {
         <button class="tablinks" onclick="openTab(event,'Subscriptions')" data-i18n="subscriptions">Subscriptions</button>
     </div>
     <div id="Databases" class="tabcontent">
-        <p data-i18n="demo_info">
-            If you want to make a demo, you can download the sample database file
-            <a href="https://drive.google.com/drive/folders/1TM0L-pWEI_MsrPpEmHc4ojLhHnrgEd29?usp=sharing" target="_blank">
-                demo.db
-            </a>
-            and connect to it from your computer.
-        </p>
+<p data-i18n="demo_info" style="position: relative; z-index: 9999; pointer-events: auto;">
+  If you want to make a demo, you can download the sample database file
+  <a href="https://drive.google.com/drive/folders/1TM0L-pWEI_MsrPpEmHc4ojLhHnrgEd29?usp=sharing"
+     target="_blank"
+     style="color: #007bff; text-decoration: underline; cursor: pointer; position: relative; z-index: 10000; pointer-events: auto;">
+    demo.db
+  </a>
+  and connect to it from your computer.
+</p>
+
         <h2 data-i18n="databases_schema">Databases & Schema</h2>
         <select id="db_select"></select>
         <button onclick="loadSchema()" data-i18n="load_schema">Load Schema</button>
