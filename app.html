@@ -1650,70 +1650,65 @@ async function createDB() {
     loadDatabases();
 }
 async function generateVisualization() {
-    if (!['premium'].includes(userTier)) {
-        showPopup(translations[currentLanguage].visualization_access_denied.replace('{tier}', userTier));
+    if (userTier !== 'premium') {
+        showPopup('You are on the ' + userTier + ' tier and cannot access the Visualization feature. Please subscribe to the Premium tier.');
         return;
     }
     const db = document.getElementById("viz_db_select").value;
     const prompt = document.getElementById("viz_prompt").value;
     if (!db || !prompt) {
-        document.getElementById("viz_summary").innerText = translations[currentLanguage].select_db_prompt;
+        alert("Select DB and enter a prompt");
         return;
     }
-    try {
-        const resp = await fetch("/visualize", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({db_name: db, prompt}),
-            credentials: 'include'
-        });
-        if (!resp.ok) {
-            throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
-        }
-        const data = await resp.json();
-        if (data.error || (data.result && data.result.error)) {
-            document.getElementById("viz_summary").innerText = data.error || data.result.error;
-            document.getElementById("viz_sql").innerText = "";
-            return;
-        }
-        if (!data.result || !data.result.columns || !data.result.rows) {
-            throw new Error("Invalid response format from server");
-        }
-        document.getElementById("viz_sql").innerText = data.result.sql;
-        document.getElementById("viz_summary").innerText = data.result.summary;
-        if (data.result.columns.length < 2) {
-            document.getElementById("viz_summary").innerText = translations[currentLanguage].chart_columns_error;
-            return;
-        }
-        if (vizChart) vizChart.destroy();
-        const ctx = document.getElementById("viz_chart").getContext("2d");
-        const labels = data.result.rows.map(r => r[data.result.columns[0]]);
-        const values = data.result.rows.map(r => r[data.result.columns[1]]);
-        vizChart = new Chart(ctx, {
-            type: data.result.chart_type || "bar",
-            data: {
-                labels,
-                datasets: [{
-                    label: data.result.columns[1],
-                    data: values,
-                    backgroundColor: 'rgba(67, 97, 238, 0.5)',
-                    borderColor: 'rgba(67, 97, 238, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                plugins: {legend: {display: true}},
-                scales: {
-                    y: {beginAtZero: true}
-                }
-            }
-        });
-    } catch (err) {
-        document.getElementById("viz_summary").innerText = translations[currentLanguage].error + ": " + err;
-        document.getElementById("viz_sql").innerText = "";
+    const resp = await fetch("/visualize", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({db_name: db, prompt}),
+        credentials: 'include'
+    });
+    const data = await resp.json();
+    if (data.error) {
+        alert(data.error);
+        return;
     }
+    document.getElementById("viz_sql").innerText = data.sql;
+    document.getElementById("viz_summary").innerText = data.summary;
+    const cols = data.columns;
+    const rows = data.rows;
+    if (cols.length < 2) {
+        alert("Need at least two columns for a chart");
+        return;
+    }
+    const labels = rows.map(r => r[cols[0]]);
+    const values = rows.map(r => Number(r[cols[1]]) || 0);
+    const isLight = document.body.classList.contains('theme-light');
+    if (vizChart) vizChart.destroy();
+    const ctx = document.getElementById("viz_chart").getContext("2d");
+    vizChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: cols[1],
+                data: values,
+                backgroundColor: isLight ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)',
+                borderColor: isLight ? 'rgba(0, 0, 0, 0.5)' : 'rgba(255, 255, 255, 0.5)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true, labels: {color: isLight ? '#333333' : '#e0e0e0'} },
+                title: { display: true, text: prompt, color: isLight ? '#333333' : '#e0e0e0', font: {size: 18} }
+            },
+            scales: {
+                x: { ticks: {color: isLight ? '#333333' : '#e0e0e0'} },
+                y: { ticks: {color: isLight ? '#333333' : '#e0e0e0'}, beginAtZero: true }
+            }
+        }
+    });
 }
-
 async function updateSubscriptionsContent() {
     if (isUpdating) return;
     isUpdating = true;
