@@ -1633,38 +1633,22 @@ async function deleteRow(db, table, condition) {
     alert("Row deleted!");
     loadTableRows();
 }
-
 async function createDB() {
     if (!['free', 'basic', 'standard', 'premium'].includes(userTier)) {
-        showPopup(translations[currentLanguage].create_db_access_denied.replace('{tier}', userTier));
+        showPopup('You are on the ' + userTier + ' tier and cannot access the Create DB feature. Please subscribe to a higher tier.');
         return;
     }
     const db_name = document.getElementById("new_db_name").value;
     const prompt = document.getElementById("db_prompt").value;
     if (!db_name || !prompt) {
-        document.getElementById("create_db_result").innerText = translations[currentLanguage].db_name_prompt_required;
+        alert("Provide database name and prompt");
         return;
     }
-    try {
-        const resp = await fetch("/create_db", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({db_name, prompt}),
-            credentials: 'include'
-        });
-        if (!resp.ok) {
-            throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
-        }
-        const data = await resp.json();
-        document.getElementById("create_db_result").innerText = data.error ? data.error : translations[currentLanguage].db_created + "\n" + JSON.stringify(data.schema, null, 2);
-        if (!data.error) {
-            await loadDatabases();
-        }
-    } catch (err) {
-        document.getElementById("create_db_result").innerText = translations[currentLanguage].error + ": " + err;
-    }
+    const resp = await fetch("/create_db", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name, prompt}), credentials: 'include'});
+    const data = await resp.json();
+    document.getElementById("create_db_result").innerText = data.error ? data.error : "Database Created!\n" + data.sql_schema;
+    loadDatabases();
 }
-
 async function generateVisualization() {
     if (!['premium'].includes(userTier)) {
         showPopup(translations[currentLanguage].visualization_access_denied.replace('{tier}', userTier));
