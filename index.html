@@ -1893,6 +1893,9 @@ document.addEventListener('DOMContentLoaded', function() {
  // Initialize language
  changeLanguage('en');
 });
+document.getElementById("nav-login").addEventListener("click", function (e) {
+    window.location.href = "/auth"; // Force redirect
+});
 
 // Auth modal functionality
 function showAuthModal(defaultTab = 'signup') {
