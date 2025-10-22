@@ -746,26 +746,30 @@ def ask():
         return jsonify({"sql": sql_query, "result": result})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-
 @app.route("/visualize", methods=["POST"])
 def visualize():
     data = request.json
     db_name = data.get("db_name")
     prompt = data.get("prompt")
-    if db_name == "Select a database" or db_name == "":
+    if db_name == "Select a database":
         return jsonify({"error": "Please select a valid database"}), 400
     try:
+        is_public = db_name == "demo.db"
         if not current_user.is_authenticated:
             return jsonify({"error": "Login required for visualization"}), 401
         if current_user.subscription_tier != "premium":
             return jsonify({"error": "Premium subscription required for visualization"}), 403
-        with sqlite3.connect(USER_DB) as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT db_type, db_path FROM user_dbs WHERE user_id = ? AND db_name = ?", (current_user.id, db_name))
-            db_info = cursor.fetchone()
-            if not db_info:
-                return jsonify({"error": "Database not found or not owned by user"}), 403
-            db_type, db_path = db_info
+        if not is_public:
+            with sqlite3.connect(USER_DB) as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT db_type, db_path FROM user_dbs WHERE user_id = ? AND db_name = ?", (current_user.id, db_name))
+                db_info = cursor.fetchone()
+                if not db_info:
+                    return jsonify({"error": "Database not found or not owned by user"}), 403
+                db_type, db_path = db_info
+        else:
+            db_type = "sqlite"
+            db_path = get_db_path(db_name)
         if db_type == "sqlite":
             conn = connect_db(db_name)
         else:
