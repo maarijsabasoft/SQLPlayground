@@ -1168,7 +1168,6 @@ const translations = {
         lang_italian: "Italiano"
     }
 };
-
 async function checkLogin() {
     try {
         const resp = await fetch("/user_info", {credentials: 'include'});
@@ -1176,21 +1175,26 @@ async function checkLogin() {
             throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
         }
         const data = await resp.json();
-        if (data.error) {
-            document.getElementById('app').style.display = 'none';
+        if (data.error || !data.tier) {
+            console.error('Login error:', data.error || 'No tier information');
+            showErrorMessage(translations[currentLanguage].error_login || 'Failed to authenticate. Please try logging in again.');
+            return;
+        }
+        userTier = data.tier;
+        document.getElementById('app').style.display = 'block';
+        await loadDatabases();
+        const firstTabButton = document.querySelector('.tablinks');
+        if (firstTabButton) {
+            firstTabButton.click(); // Open the first tab (Databases)
         } else {
-            userTier = data.tier;
-            document.getElementById('app').style.display = 'block';
-            await loadDatabases();
-            document.querySelectorAll('.tablinks')[0].click();
+            console.error('No tablinks found to open default tab');
+            showErrorMessage(translations[currentLanguage].error_ui || 'Error initializing UI. Please refresh the page.');
         }
     } catch (err) {
         console.error('Error checking login status:', err);
-        document.getElementById('app').style.display = 'none';
+        showErrorMessage(translations[currentLanguage].error_login || 'Error connecting to server. Please check your connection and try again.');
     }
 }
-checkLogin();
-
 function showApp() {
     document.getElementById('app').style.display = 'block';
     checkTabAccess('Databases');
@@ -1862,3 +1866,4 @@ document.addEventListener("DOMContentLoaded", () => {
 }); // ✅ closes both the function and the addEventListener
 </script>
 
+</body>
