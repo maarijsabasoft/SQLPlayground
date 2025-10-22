@@ -1794,25 +1794,30 @@ let userTier = 'free';
 async function checkLogin() {
     try {
         const resp = await fetch("/user_info", {credentials: 'include'});
+        if (!resp.ok) {
+            throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
+        }
         const data = await resp.json();
-        if (data.error) {
-            document.getElementById('landing').style.display = 'flex';
-            document.getElementById('app').style.display = 'none';
-            // document.getElementById('profile-container').style.display = 'none';
-            // document.getElementById('logout').style.display = 'none';
+        if (data.error || !data.tier) {
+            console.error('Login error:', data.error || 'No tier information');
+            showErrorMessage(translations[currentLanguage].error_login || 'Failed to authenticate. Please try logging in again.');
+            return;
+        }
+        userTier = data.tier;
+        document.getElementById('app').style.display = 'block';
+        await loadDatabases();
+        const firstTabButton = document.querySelector('.tablinks');
+        if (firstTabButton) {
+            firstTabButton.click(); // Open the first tab (Databases)
         } else {
-            userTier = data.tier;
-            document.getElementById('landing').style.display = 'none';
-            document.getElementById('app').style.display = 'block';
-            // document.getElementById('profile-container').style.display = 'block';
-            loadDatabases();
-            document.querySelectorAll('.tablinks')[0].click();
+            console.error('No tablinks found to open default tab');
+            showErrorMessage(translations[currentLanguage].error_ui || 'Error initializing UI. Please refresh the page.');
         }
     } catch (err) {
-        document.getElementById('auth-message').innerText = 'Error checking login status: ' + err;
+        console.error('Error checking login status:', err);
+        showErrorMessage(translations[currentLanguage].error_login || 'Error connecting to server. Please check your connection and try again.');
     }
 }
-checkLogin();
 async function signup() {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
