@@ -798,22 +798,30 @@ def visualize():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-
 @app.route("/create_db", methods=["POST"])
 @login_required
 def create_db():
     if current_user.subscription_tier not in ["free", "basic", "standard", "premium"]:
         return jsonify({"error": "Free, Basic, Standard, or Premium subscription required for creating databases"}), 403
+
     data = request.json
     db_name = data.get("db_name")
     prompt = data.get("prompt")
+
     if not db_name:
         return jsonify({"error": "Database name is required"}), 400
+
     if not db_name.endswith(".db"):
         db_name += ".db"
+
+    # Create user-specific folder
     user_folder = os.path.join(app.config["UPLOAD_FOLDER"], str(current_user.id))
     os.makedirs(user_folder, exist_ok=True)
+
+    # Full path to user's DB
     db_path = os.path.join(user_folder, db_name)
+
+    # Check only if this user already has a DB with the same name
     with sqlite3.connect(USER_DB) as conn:
         cursor = conn.cursor()
         cursor.execute(
@@ -821,35 +829,45 @@ def create_db():
             (current_user.id, db_name)
         )
         exists = cursor.fetchone()
+
     if exists:
         return jsonify({"error": "You already have a database with this name!"}), 400
+
     try:
+        # Generate schema from LLM
         system_message = {
             "role": "system",
             "content": "You are a SQL assistant. Generate only SQL CREATE TABLE statements based on the user's description. Do not add data, comments or explanation."
         }
         user_message = {"role": "user", "content": prompt}
+
         resp = groq_client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[system_message, user_message]
         )
+
         sql_schema = resp.choices[0].message.content.strip()
         if sql_schema.startswith("```sql"):
             sql_schema = sql_schema.strip("```sql").strip("```").strip()
+
+        # Create actual SQLite DB
         with sqlite3.connect(db_path, timeout=10) as conn:
             conn.execute("PRAGMA journal_mode=WAL;")
             conn.executescript(sql_schema)
             conn.commit()
+
+        # Save reference in user_dbs
         with sqlite3.connect(USER_DB) as conn:
             conn.execute("""
                 INSERT INTO user_dbs (user_id, db_name, db_type, db_path)
                 VALUES (?, ?, ?, ?)
             """, (current_user.id, db_name, "sqlite", db_path))
             conn.commit()
+
         return jsonify({"status": "Database created", "sql_schema": sql_schema})
+
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-
 @app.route("/add_row", methods=["POST"])
 @login_required
 def add_row():
