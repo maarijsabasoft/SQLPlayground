@@ -282,6 +282,9 @@ def tool():
 def app_page():
     return render_template("index.html")
 
+@app.route('/google8c1160341f6a72b4.html')
+def google_verification():
+    return send_from_directory('.', 'google8c1160341f6a72b4.html')
 @app.route("/signup", methods=["POST"])
 def signup():
     data = request.json
