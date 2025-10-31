@@ -434,7 +434,7 @@ def github_auth_callback():
                 user = (user_id, email, "free")
             login_user(User(user[0], user[1], user[2]))
         flash("Logged in successfully via GitHub!", "success")
-        return redirect(url_for("app_page"))
+        return redirect(url_for("tool"))
     except Exception as e:
         logger.error(f"GitHub login failed: {str(e)}")
         flash(f"GitHub login failed: {str(e)}", "error")
