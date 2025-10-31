@@ -15,11 +15,9 @@ from authlib.integrations.flask_client import OAuth
 import logging
 import secrets
 
-# Set up logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-# ---------- Config & Keys ----------
 GROQ_API_KEY = os.environ.get(
     "GROQ_API_KEY",
     "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"
@@ -36,7 +34,6 @@ if not STRIPE_SECRET_KEY:
 else:
     stripe.api_key = STRIPE_SECRET_KEY
 
-# OAuth Configuration
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "836571438073-09ml50l2hccddj99mbsqc2dtbg3h8l6b.apps.googleusercontent.com")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "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")
 GITHUB_CLIENT_ID = os.environ.get("GITHUB_CLIENT_ID", "Ov23li8WI3HV8rkiYk49")
@@ -45,12 +42,11 @@ GITHUB_CLIENT_SECRET = os.environ.get("GITHUB_CLIENT_SECRET", "6bf30dc6d5e8a1901
 DB_FOLDER = "databases"
 os.makedirs(DB_FOLDER, exist_ok=True)
 app = Flask(__name__, static_folder=".", template_folder=".")
-app.secret_key = os.urandom(24)  # Required for sessions
+app.secret_key = os.urandom(24)  
 app.config["UPLOAD_FOLDER"] = DB_FOLDER
-# OAuth setup
+
 oauth = OAuth(app)
 
-# Google OAuth configuration
 google = oauth.register(
     name='google',
     client_id='836571438073-09ml50l2hccddj99mbsqc2dtbg3h8l6b.apps.googleusercontent.com',
@@ -69,7 +65,6 @@ github = oauth.register(
     api_base_url='https://api.github.com/'
 )
 
-# ---------- User Database Setup ----------
 USER_DB = "users.db"
 
 def init_user_db():
@@ -95,7 +90,6 @@ def init_user_db():
 
 init_user_db()
 
-# ---------- Create demo.db ----------
 def create_demo_db():
     db_path = os.path.join(DB_FOLDER, "")
     with sqlite3.connect(db_path) as conn:
@@ -242,7 +236,6 @@ def create_demo_db():
         """)
         conn.commit()
 
-# ---------- Flask-Login Setup ----------
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login_page"
@@ -263,12 +256,10 @@ def load_user(user_id):
             return User(user[0], user[1], user[2])
         return None
 
-# ---------- Routes ----------
 @app.route("/")
 def index():
-    # if current_user.is_authenticated:
     return redirect("/app")
-    # return redirect("/auth")
+    
 
 @app.route("/auth")
 def auth_page():
@@ -278,7 +269,6 @@ def auth_page():
 def tool():
     return render_template("app.html")
 @app.route("/app")
-# @login_required
 def app_page():
     return render_template("index.html")
 
