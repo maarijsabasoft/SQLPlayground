@@ -5,6 +5,7 @@ import webbrowser
 import json
 import re
 from flask import Flask,send_from_directory, request, render_template, jsonify, url_for, session, redirect, send_file,flash
+from flask_cors import CORS
 from groq import Groq
 import pymysql
 import psycopg2
@@ -14,56 +15,79 @@ import stripe
 from authlib.integrations.flask_client import OAuth
 import logging
 import secrets
+from dotenv import load_dotenv
+from flask_mail import Mail, Message
+import random
+import string
+from datetime import datetime, timedelta
+
+# Load environment variables from .env file
+load_dotenv()
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-GROQ_API_KEY = os.environ.get(
-    "GROQ_API_KEY",
-    "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"
-)
-if GROQ_API_KEY == "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":
-    print("Warning: Set your GROQ_API_KEY environment variable!")
-groq_client = Groq(api_key=GROQ_API_KEY)
+# Load environment variables
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+if not GROQ_API_KEY:
+    print("Warning: GROQ_API_KEY not set in .env file!")
+groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 
-STRIPE_SECRET_KEY = "sk_test_51SCZrEBHO8g2Q8ZQjcKLrhyyvXwjPHfjANMf2ppwxrkZTMrroWLWxI6s6KfWV3tGQZzz9VqG0nA8pySzJK1njZSr002baWcZmf"
-STRIPE_PUBLISHABLE_KEY = "pk_test_51SCZrEBHO8g2Q8ZQ0P7oN581Q1Fq3l0VzzpLv8yroTjAV1DIFnhV64bMLjyfDh0Kp6Snf2oKHNi2xUC3TEu4zJxl00yE3q5phJ"
-STRIPE_WEBHOOK_SECRET = "whsec_d089c53f00ae2edbea1e23f8fc82d24c2d5b821940b28be5e43fdb6aa52f42f7"
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
+STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
 if not STRIPE_SECRET_KEY:
-    print("Warning: STRIPE_SECRET_KEY not set. Stripe endpoints will raise errors until set.")
+    print("Warning: STRIPE_SECRET_KEY not set in .env file. Stripe endpoints will raise errors until set.")
 else:
     stripe.api_key = STRIPE_SECRET_KEY
 
-GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "836571438073-09ml50l2hccddj99mbsqc2dtbg3h8l6b.apps.googleusercontent.com")
-GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "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")
-GITHUB_CLIENT_ID = os.environ.get("GITHUB_CLIENT_ID", "Ov23li8WI3HV8rkiYk49")
-GITHUB_CLIENT_SECRET = os.environ.get("GITHUB_CLIENT_SECRET", "6bf30dc6d5e8a190143337b3559443d821731e7e")
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
+GITHUB_CLIENT_ID = os.environ.get("GITHUB_CLIENT_ID")
+GITHUB_CLIENT_SECRET = os.environ.get("GITHUB_CLIENT_SECRET")
 
 DB_FOLDER = "databases"
 os.makedirs(DB_FOLDER, exist_ok=True)
 app = Flask(__name__, static_folder=".", template_folder=".")
-app.secret_key = os.urandom(24)  
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", os.urandom(24).hex())
 app.config["UPLOAD_FOLDER"] = DB_FOLDER
+
+# Add CORS support
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
+
+# Configure Flask-Mail for email verification
+app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
+app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'True').lower() == 'true'
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+mail = Mail(app)
 
 oauth = OAuth(app)
 
-google = oauth.register(
-    name='google',
-    client_id='836571438073-09ml50l2hccddj99mbsqc2dtbg3h8l6b.apps.googleusercontent.com',
-    client_secret='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',
-    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
-    client_kwargs={'scope': 'openid email profile'}
-)
+if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
+    google = oauth.register(
+        name='google',
+        client_id=GOOGLE_CLIENT_ID,
+        client_secret=GOOGLE_CLIENT_SECRET,
+        server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+        client_kwargs={'scope': 'openid email profile'}
+    )
+else:
+    google = None
 
-github = oauth.register(
-    name='github',
-    client_id='Ov23li8WI3HV8rkiYk49',
-    client_secret='6bf30dc6d5e8a190143337b3559443d821731e7e',
-    authorize_url='https://github.com/login/oauth/authorize',
-    access_token_url='https://github.com/login/oauth/access_token',
-    client_kwargs={'scope': 'user:email'},
-    api_base_url='https://api.github.com/'
-)
+if GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET:
+    github = oauth.register(
+        name='github',
+        client_id=GITHUB_CLIENT_ID,
+        client_secret=GITHUB_CLIENT_SECRET,
+        authorize_url='https://github.com/login/oauth/authorize',
+        access_token_url='https://github.com/login/oauth/access_token',
+        client_kwargs={'scope': 'user:email'},
+        api_base_url='https://api.github.com/'
+    )
+else:
+    github = None
 
 USER_DB = "users.db"
 
@@ -74,7 +98,8 @@ def init_user_db():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 email TEXT UNIQUE NOT NULL,
                 password TEXT NOT NULL,
-                subscription_tier TEXT DEFAULT 'free'
+                subscription_tier TEXT DEFAULT 'free',
+                email_verified INTEGER DEFAULT 0
             )
         """)
         conn.execute("""
@@ -84,6 +109,16 @@ def init_user_db():
                 db_type TEXT,
                 db_path TEXT,
                 FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS email_verifications (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT NOT NULL,
+                otp_code TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                expires_at TIMESTAMP,
+                verified INTEGER DEFAULT 0
             )
         """)
         conn.commit()
@@ -275,36 +310,105 @@ def app_page():
 @app.route('/google8c1160341f6a72b4.html')
 def google_verification():
     return send_from_directory('.', 'google8c1160341f6a72b4.html')
+def generate_otp():
+    """Generate a 6-digit OTP code"""
+    return ''.join(random.choices(string.digits, k=6))
+
+def send_otp_email(email, otp_code):
+    """Send OTP verification email"""
+    try:
+        msg = Message(
+            subject='SQL Nurse - Email Verification Code',
+            sender=app.config['MAIL_USERNAME'],
+            recipients=[email]
+        )
+        msg.body = f"""
+        Thank you for signing up for SQL Nurse!
+        
+        Your verification code is: {otp_code}
+        
+        This code will expire in 10 minutes.
+        
+        If you didn't sign up for SQL Nurse, please ignore this email.
+        """
+        mail.send(msg)
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send email: {str(e)}")
+        return False
+
 @app.route("/signup", methods=["POST"])
 def signup():
     data = request.json
     email = data.get("email")
     password = data.get("password")
+    otp_code = data.get("otp_code")  # For verification step
+    
     if not email or not password:
         return jsonify({"error": "Email and password are required"}), 400
+    
     try:
         with sqlite3.connect(USER_DB) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT id FROM users WHERE email = ?", (email,))
             if cursor.fetchone():
                 return jsonify({"error": "Email already registered"}), 400
-            hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-            subscription_tier = "premium"
-            cursor.execute(
-                "INSERT INTO users (email, password, subscription_tier) VALUES (?, ?, ?)",
-                (email, hashed_pw, subscription_tier)
-            )
-            conn.commit()
-            user_id = cursor.lastrowid
-            user = User(user_id, email, subscription_tier)
-            login_user(user)
-            return jsonify({
-                "status": "success",
-                "message": "You are signed up successfully!",
-                "tier": subscription_tier,
-                 "redirect": request.referrer or "/"
-            })
+            
+            # If OTP code is provided, verify it
+            if otp_code:
+                cursor.execute("""
+                    SELECT id FROM email_verifications 
+                    WHERE email = ? AND otp_code = ? AND verified = 0 
+                    AND expires_at > datetime('now')
+                """, (email, otp_code))
+                verification = cursor.fetchone()
+                if not verification:
+                    return jsonify({"error": "Invalid or expired verification code"}), 400
+                
+                # Mark verification as used
+                cursor.execute("UPDATE email_verifications SET verified = 1 WHERE email = ? AND otp_code = ?", 
+                             (email, otp_code))
+                
+                # Create user account
+                hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+                subscription_tier = "premium"
+                cursor.execute(
+                    "INSERT INTO users (email, password, subscription_tier, email_verified) VALUES (?, ?, ?, ?)",
+                    (email, hashed_pw, subscription_tier, 1)
+                )
+                conn.commit()
+                user_id = cursor.lastrowid
+                user = User(user_id, email, subscription_tier)
+                login_user(user)
+                return jsonify({
+                    "status": "success",
+                    "message": "You are signed up successfully!",
+                    "tier": subscription_tier,
+                    "redirect":  "/tool",
+                })
+            else:
+                # Generate and send OTP
+                otp = generate_otp()
+                expires_at = datetime.now() + timedelta(minutes=10)
+                
+                # Store OTP in database
+                cursor.execute("""
+                    INSERT INTO email_verifications (email, otp_code, expires_at)
+                    VALUES (?, ?, ?)
+                """, (email, otp, expires_at))
+                conn.commit()
+                
+                # Send email
+                if send_otp_email(email, otp):
+                    return jsonify({
+                        "status": "otp_sent",
+                        "message": "Verification code sent to your email. Please check your inbox."
+                    })
+                else:
+                    return jsonify({"error": "Failed to send verification email. Please try again."}), 500
+                    
     except Exception as e:
+        logger.error(f"Signup error: {str(e)}")
         return jsonify({"error": str(e)}), 400
 
 @app.route("/login", methods=["POST"])
@@ -331,6 +435,9 @@ def login():
         return jsonify({"error": str(e)}), 400
 @app.route("/google-login", methods=["GET"])
 def google_login():
+    if not google:
+        flash("Google OAuth not configured", "error")
+        return redirect(url_for("auth_page"))
     callback_url = url_for('google_auth_callback', _external=True)
     nonce = secrets.token_urlsafe(16)
     session['google_nonce'] = nonce
@@ -377,6 +484,9 @@ def google_auth_callback():
 
 @app.route("/github-login", methods=["GET"])
 def github_login():
+    if not github:
+        flash("GitHub OAuth not configured", "error")
+        return redirect(url_for("auth_page"))
     callback_url = url_for('github_auth_callback', _external=True)
     logger.debug(f"Initiating GitHub login with callback: {callback_url}")
     try:
@@ -431,10 +541,10 @@ def github_auth_callback():
         return redirect(url_for("auth_page"))
 
 @app.route("/logout", methods=["POST"])
-@login_required
 def logout():
-    logout_user()
-    return jsonify({"status": "Logged out"})
+    if current_user.is_authenticated:
+        logout_user()
+    return jsonify({"status": "Logged out", "message": "You are successfully logged out"})
 
 @app.route("/user_info", methods=["GET"])
 def user_info():

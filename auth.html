@@ -44,13 +44,14 @@
         
         .auth-container {
             background: rgba(255, 255, 255, 0.95);
-            padding: 40px;
+            padding: 20px;
             border-radius: var(--border-radius);
             box-shadow: var(--box-shadow);
             width: 100%;
             max-width: 400px;
             text-align: center;
             backdrop-filter: blur(10px);
+            margin-top: 30px;
         }
         
         h1 {
@@ -196,6 +197,74 @@
             flex-direction: column;
             gap: 0.5rem;
         }
+
+        /* OTP popup styles */
+        .otp-popup {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .otp-content {
+            background: #fff;
+            color: var(--dark);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .otp-content h2 {
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .otp-content p {
+            color: var(--gray);
+            margin-bottom: 15px;
+        }
+
+        #otp-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--gray-light);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        .otp-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .otp-actions .submit {
+            flex: 1;
+        }
+
+        .otp-actions .cancel {
+            flex: 1;
+            background: var(--gray);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .otp-actions .cancel:hover {
+            background: #555;
+        }
     </style>
 </head>
 <body>
@@ -225,15 +294,30 @@
             <button class="submit" onclick="signup()">Sign Up</button>
             <p class="error" id="signup-error"></p>
             <div class="oauth-buttons">
-                <a href="{{ url_for('google_login') }}" class="oauth-btn google" aria-label="Login with Google">
+                <a href="{{ url_for('google_login') }}" class="oauth-btn google" aria-label="Sign up with Google">
                     <img src="https://www.google.com/favicon.ico" alt="Google logo"> Sign up with Google
                 </a>
-                <a href="{{ url_for('github_login') }}" class="oauth-btn github" aria-label="Login with GitHub">
+                <a href="{{ url_for('github_login') }}" class="oauth-btn github" aria-label="Sign up with GitHub">
                     <img src="https://github.githubassets.com/favicons/favicon.png" alt="GitHub logo"> Sign up with GitHub
                 </a>
             </div>
         </div>
     </div>
+
+    <!-- ✅ OTP Popup -->
+    <div id="otp-popup" class="otp-popup">
+      <div class="otp-content">
+        <h2>Email Verification</h2>
+        <p id="otp-message">A verification code has been sent to your email.</p>
+        <input type="text" id="otp-input" placeholder="Enter your 6-digit code">
+        <div class="otp-actions">
+          <button id="verify-otp-btn" class="submit">Verify</button>
+          <button id="cancel-otp-btn" class="cancel">Cancel</button>
+        </div>
+        <p class="error" id="otp-error"></p>
+      </div>
+    </div>
+
     <script>
         function openTab(tabName) {
             document.querySelectorAll('.tabcontent').forEach(tab => tab.classList.remove('active'));
@@ -273,6 +357,17 @@
             }
         }
 
+        function showOtpPopup(message) {
+            document.getElementById('otp-message').textContent = message;
+            document.getElementById('otp-input').value = '';
+            document.getElementById('otp-error').style.display = 'none';
+            document.getElementById('otp-popup').style.display = 'flex';
+        }
+
+        function hideOtpPopup() {
+            document.getElementById('otp-popup').style.display = 'none';
+        }
+
         async function signup() {
             const email = document.getElementById('signup-email').value;
             const password = document.getElementById('signup-password').value;
@@ -297,17 +392,47 @@
                 if (data.error) {
                     error.textContent = data.error;
                     error.style.display = 'block';
-                } else {
-                    // ✅ Show success message before redirect
-                    error.style.color = '#4bb543';
-                    error.textContent = data.message || 'Signup successful!';
-                    error.style.display = 'block';
+                } 
+                else if (data.status === 'otp_sent') {
+                    showOtpPopup(data.message);
+                    document.getElementById('verify-otp-btn').onclick = async () => {
+                        const otp_code = document.getElementById('otp-input').value.trim();
+                        const otpError = document.getElementById('otp-error');
+                        if (!otp_code) {
+                            otpError.textContent = 'Please enter the verification code.';
+                            otpError.style.display = 'block';
+                            return;
+                        }
 
-                    // Redirect after 1.5 seconds
-                    setTimeout(() => {
-                        window.location.href = data.redirect;
-                    }, 1500);
+                        const verifyResponse = await fetch('/signup', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email, password, otp_code }),
+                            credentials: 'include'
+                        });
+
+                        const verifyData = await verifyResponse.json();
+                        if (verifyData.error) {
+                            otpError.textContent = verifyData.error;
+                            otpError.style.display = 'block';
+                        } else {
+                            hideOtpPopup();
+                            alert(verifyData.message || 'Signup successful!');
+                            window.location.href = verifyData.redirect;
+                        }
+                    };
+
+                    document.getElementById('cancel-otp-btn').onclick = () => hideOtpPopup();
                 }
+                else if (data.status === 'success') {
+                    alert('Signup complete!');
+                    window.location.href = data.redirect;
+                } 
+                else {
+                    error.textContent = 'Unexpected response.';
+                    error.style.display = 'block';
+                }
+
             } catch (err) {
                 error.textContent = 'An error occurred. Please try again.';
                 error.style.display = 'block';

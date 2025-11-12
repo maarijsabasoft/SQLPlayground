@@ -6,6 +6,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://js.stripe.com/v3/"></script>
     <!-- Google tag (gtag.js) -->
+     
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-45B70ZPTEZ"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -335,10 +336,35 @@ pre {
     <button onclick="goToSubscriptions()" data-i18n="subscribe_now">Subscribe Now</button>
     <button onclick="closePopup()" data-i18n="close">Close</button>
 </div>
-<div id="app">
+<div style="margin: 20px; width: 150px;">
+    <a href="{{ url_for('app_page') }}">
+        <button style="
+            padding: 6px 12px;
+            font-size: 14px;
+            background-color: #4361ee;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        ">
+            Back to Home
+        </button>
+    </a>
+</div>
+
+<div id="app" style="margin-top: -50px;">
     <header>
-        <h1 data-i18n="title">SQL Nurse</h1>
-        <p data-i18n="subtitle">Your Database Management and Visualization Tool</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <div>
+                <h1 data-i18n="title">SQL Nurse</h1>
+                <p data-i18n="subtitle">Your Database Management and Visualization Tool</p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <a href="/auth" class="nav-button" id="app-nav-login" style="display: none; padding: 8px 20px; background: var(--primary); color: white; text-decoration: none; border-radius: var(--border-radius);" data-i18n="nav_login">Login</a>
+                <a href="/auth" class="nav-button" id="app-nav-signup" style="display: none; padding: 8px 20px; background: var(--primary); color: white; text-decoration: none; border-radius: var(--border-radius);" data-i18n="nav_signup">Sign Up</a>
+                <button class="nav-button" id="app-nav-logout" style="display: none; padding: 8px 20px; background: var(--primary); color: white; border: none; border-radius: var(--border-radius); cursor: pointer;" onclick="handleAppLogout()" data-i18n="nav_logout">Logout</button>
+            </div>
+        </div>
     </header>
     <div class="tab">
         <button class="tablinks" onclick="checkTabAccess('Databases')" data-i18n="databases">Databases</button>
@@ -1800,9 +1826,64 @@ async function startCheckout(plan) {
         alert(translations[currentLanguage].error + ": " + err);
     }
 }
+// Check auth status for app page
+async function checkAppAuthStatus() {
+    try {
+        const response = await fetch('/user_info', { credentials: 'include' });
+        if (response.ok) {
+            const data = await response.json();
+            if (data.email) {
+                // User is logged in
+                document.getElementById('app-nav-login').style.display = 'none';
+                document.getElementById('app-nav-signup').style.display = 'none';
+                document.getElementById('app-nav-logout').style.display = 'inline-block';
+            } else {
+                // User is not logged in
+                document.getElementById('app-nav-login').style.display = 'inline-block';
+                document.getElementById('app-nav-signup').style.display = 'inline-block';
+                document.getElementById('app-nav-logout').style.display = 'none';
+            }
+        } else {
+            // Not logged in
+            document.getElementById('app-nav-login').style.display = 'inline-block';
+            document.getElementById('app-nav-signup').style.display = 'inline-block';
+            document.getElementById('app-nav-logout').style.display = 'none';
+        }
+    } catch (err) {
+        // Not logged in
+        document.getElementById('app-nav-login').style.display = 'inline-block';
+        document.getElementById('app-nav-signup').style.display = 'inline-block';
+        document.getElementById('app-nav-logout').style.display = 'none';
+    }
+}
+
+// Logout handler for app page
+async function handleAppLogout() {
+    try {
+        const response = await fetch('/logout', {
+            method: 'POST',
+            credentials: 'include'
+        });
+        const data = await response.json();
+        
+        // Show success popup
+        alert('You are successfully logged out');
+        
+        // Update navbar
+        checkAppAuthStatus();
+        
+        // Redirect to home
+        window.location.href = '/';
+    } catch (err) {
+        console.error('Logout error:', err);
+        alert('Error logging out. Please try again.');
+    }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     changeLanguage('en'); // Initialize with English
     updateSubscriptionsContent();
+    checkAppAuthStatus(); // Check auth status for navbar
     checkLogin(); // Trigger login check to initialize app
 });
 </script>

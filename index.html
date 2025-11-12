@@ -729,6 +729,10 @@ footer {
   text-align: center;
  }
 }
+#nav-login {
+  display: none !important;
+}
+
 </style>
 </head>
 <body>
@@ -741,11 +745,9 @@ footer {
    <a href="#how-it-works" data-i18n="nav_how_it_works">How It Works</a>
    <a href="#pricing" data-i18n="nav_pricing">Pricing</a>
    <a href="#faq" data-i18n="nav_faq">FAQ</a>
-<a href="{{ url_for('auth_page') }}" class="nav-button" id="nav-login" data-i18n="nav_login">
-  Login
-</a>
-
-
+   <a href="{{ url_for('auth_page') }}" class="nav-button" id="nav-login" style="display: none;" data-i18n="nav_login">Login & Signup</a>
+   <a href="{{ url_for('auth_page') }}" class="nav-button" id="nav-signup" style="display: none;" data-i18n="nav_signup">Sign Up</a>
+   <button class="nav-button" id="nav-logout" style="display: none;" onclick="handleLogout()" data-i18n="nav_logout">Logout</button>
   </div>
  </nav>
 
@@ -986,6 +988,7 @@ const translations = {
         nav_pricing: "Pricing",
         nav_faq: "FAQ",
         nav_login: "Login",
+        nav_signup:"Login/Signup",
         hero_title: "Revolutionize Your Database Management",
         hero_subtitle: "SQL Nurse is an all-in-one platform that simplifies database interaction, query generation, table management, and data visualization with an intuitive interface.",
         get_started: "Get Started",
@@ -1057,7 +1060,7 @@ const translations = {
         footer_copyright: "&copy; 2023 SQL Nurse. All rights reserved.",
         auth_title: "Welcome to SQL Nurse",
         auth_login: "Login",
-        auth_signup: "Sign Up",
+        auth_signup: "Login/Sign Up",
         email_placeholder: "Email",
         password_placeholder: "Password",
         auth_error: "",
@@ -1893,9 +1896,64 @@ document.addEventListener('DOMContentLoaded', function() {
  // Initialize language
  changeLanguage('en');
 });
-document.getElementById("nav-login").addEventListener("click", function (e) {
-    window.location.href = "/auth"; // Force redirect
-});
+// Check login status and update navbar
+async function checkAuthStatus() {
+    try {
+        const response = await fetch('/user_info', { credentials: 'include' });
+        if (response.ok) {
+            const data = await response.json();
+            if (data.email) {
+                // User is logged in
+                document.getElementById('nav-login').style.display = 'none';
+                document.getElementById('nav-signup').style.display = 'none';
+                document.getElementById('nav-logout').style.display = 'inline-block';
+            } else {
+                // User is not logged in
+                document.getElementById('nav-login').style.display = 'inline-block';
+                document.getElementById('nav-signup').style.display = 'inline-block';
+                document.getElementById('nav-logout').style.display = 'none';
+            }
+        } else {
+            // Not logged in
+            document.getElementById('nav-login').style.display = 'inline-block';
+            document.getElementById('nav-signup').style.display = 'inline-block';
+            document.getElementById('nav-logout').style.display = 'none';
+        }
+    } catch (err) {
+        // Not logged in
+        document.getElementById('nav-login').style.display = 'inline-block';
+        document.getElementById('nav-signup').style.display = 'inline-block';
+        document.getElementById('nav-logout').style.display = 'none';
+    }
+}
+
+// Logout handler with popup
+async function handleLogout() {
+    try {
+        const response = await fetch('/logout', {
+            method: 'POST',
+            credentials: 'include'
+        });
+        const data = await response.json();
+        
+        // Show success popup
+        alert('You are successfully logged out');
+        
+        // Update navbar
+        checkAuthStatus();
+        
+        // Redirect to home if needed
+        if (window.location.pathname !== '/') {
+            window.location.href = '/';
+        }
+    } catch (err) {
+        console.error('Logout error:', err);
+        alert('Error logging out. Please try again.');
+    }
+}
+
+// Initialize auth status on page load
+checkAuthStatus();
 
 // Auth modal functionality
 function showAuthModal(defaultTab = 'signup') {
