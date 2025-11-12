@@ -5,9 +5,20 @@
 <title data-i18n="title">SQL Nurse - Professional Database Management</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://js.stripe.com/v3/"></script>
-   <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
-  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png') }}">
-  <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16x16.png') }}">
+<!-- Standard favicons -->
+<link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16x16.png') }}">
+<link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png') }}">
+<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
+<!-- Apple Touch Icon (iOS, Safari) -->
+<link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+
+<!-- Android Chrome icons -->
+<link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='android-chrome-192x192.png') }}">
+<link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='android-chrome-512x512.png') }}">
+
 <style>
 /* Professional Color Scheme */
 :root {
