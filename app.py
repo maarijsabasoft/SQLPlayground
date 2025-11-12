@@ -819,6 +819,11 @@ def db_description():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
+@app.route('/site.webmanifest')
+def manifest():
+    return send_from_directory('static', 'site.webmanifest')
+
+
 @app.route("/ask", methods=["POST"])
 def ask():
     data = request.json
