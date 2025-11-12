@@ -307,6 +307,10 @@ def tool():
 def app_page():
     return render_template("index.html")
 
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
 @app.route('/google8c1160341f6a72b4.html')
 def google_verification():
     return send_from_directory('.', 'google8c1160341f6a72b4.html')
