@@ -1,108 +1,135 @@
+"""
+SQL Playground - Database Management and Visualization Tool
+A Flask-based application for managing databases with AI-powered query generation.
+"""
+
 import os
 import sqlite3
-import threading
-import webbrowser
 import json
 import re
-from flask import Flask,send_from_directory, request, render_template, jsonify, url_for, session, redirect, send_file,flash
-from flask_cors import CORS
-from groq import Groq
-import pymysql
-import psycopg2
-from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
-import bcrypt
-import stripe
-from authlib.integrations.flask_client import OAuth
 import logging
 import secrets
-from dotenv import load_dotenv
-from flask_mail import Mail, Message
 import random
 import string
-from datetime import datetime, timedelta
+
+from flask import Flask, request, render_template, jsonify, url_for, session, redirect, send_file, flash
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from groq import Groq
+from dotenv import load_dotenv
+from authlib.integrations.flask_client import OAuth
+
+import pymysql
+import psycopg2
+import bcrypt
+import stripe
+import requests
 
 # Load environment variables from .env file
 load_dotenv()
 
+# Set up logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-# Load environment variables
+# ---------- Config & Keys ----------
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 if not GROQ_API_KEY:
-    print("Warning: GROQ_API_KEY not set in .env file!")
-groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
+    raise ValueError("GROQ_API_KEY not set in environment variables!")
+groq_client = Groq(api_key=GROQ_API_KEY)
 
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
 STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
 if not STRIPE_SECRET_KEY:
-    print("Warning: STRIPE_SECRET_KEY not set in .env file. Stripe endpoints will raise errors until set.")
+    print("Warning: STRIPE_SECRET_KEY not set. Stripe endpoints will raise errors until set.")
 else:
     stripe.api_key = STRIPE_SECRET_KEY
 
+# OAuth Configuration
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
 GITHUB_CLIENT_ID = os.environ.get("GITHUB_CLIENT_ID")
 GITHUB_CLIENT_SECRET = os.environ.get("GITHUB_CLIENT_SECRET")
 
+# Resend API Configuration
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY")
+RESEND_FROM_EMAIL = os.environ.get("RESEND_FROM_EMAIL", "send@support.tokenmap.io")
+
+# ============================================================================
+# Flask Application Setup
+# ============================================================================
+
 DB_FOLDER = "databases"
 os.makedirs(DB_FOLDER, exist_ok=True)
+
 app = Flask(__name__, static_folder=".", template_folder=".")
-app.secret_key = os.environ.get("FLASK_SECRET_KEY", os.urandom(24).hex())
+app.secret_key = os.urandom(24)
 app.config["UPLOAD_FOLDER"] = DB_FOLDER
 
-# Add CORS support
-CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
-
-# Configure Flask-Mail for email verification
-app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
-app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
-app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'True').lower() == 'true'
-app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
-app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
-mail = Mail(app)
-
+# OAuth setup
 oauth = OAuth(app)
 
-if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
-    google = oauth.register(
-        name='google',
-        client_id=GOOGLE_CLIENT_ID,
-        client_secret=GOOGLE_CLIENT_SECRET,
-        server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
-        client_kwargs={'scope': 'openid email profile'}
-    )
-else:
-    google = None
+# Google OAuth configuration
+google = oauth.register(
+    name='google',
+    client_id=GOOGLE_CLIENT_ID,
+    client_secret=GOOGLE_CLIENT_SECRET,
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={'scope': 'openid email profile'}
+)
 
-if GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET:
-    github = oauth.register(
-        name='github',
-        client_id=GITHUB_CLIENT_ID,
-        client_secret=GITHUB_CLIENT_SECRET,
-        authorize_url='https://github.com/login/oauth/authorize',
-        access_token_url='https://github.com/login/oauth/access_token',
-        client_kwargs={'scope': 'user:email'},
-        api_base_url='https://api.github.com/'
-    )
-else:
-    github = None
+github = oauth.register(
+    name='github',
+    client_id=GITHUB_CLIENT_ID,
+    client_secret=GITHUB_CLIENT_SECRET,
+    authorize_url='https://github.com/login/oauth/authorize',
+    access_token_url='https://github.com/login/oauth/access_token',
+    client_kwargs={'scope': 'user:email'},
+    api_base_url='https://api.github.com/'
+)
+
+# ============================================================================
+# User Database Configuration
+# ============================================================================
 
 USER_DB = "users.db"
 
 def init_user_db():
     with sqlite3.connect(USER_DB) as conn:
-        conn.execute("""
+        cursor = conn.cursor()
+        
+        # Create users table if it doesn't exist
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 email TEXT UNIQUE NOT NULL,
                 password TEXT NOT NULL,
                 subscription_tier TEXT DEFAULT 'free',
-                email_verified INTEGER DEFAULT 0
+                email_verified INTEGER DEFAULT 0,
+                verification_code TEXT
             )
         """)
-        conn.execute("""
+        
+        # Check if verification_code column exists, if not add it
+        cursor.execute("PRAGMA table_info(users)")
+        columns = [column[1] for column in cursor.fetchall()]
+        if 'verification_code' not in columns:
+            try:
+                cursor.execute("ALTER TABLE users ADD COLUMN verification_code TEXT")
+                logger.info("Added verification_code column to users table")
+            except sqlite3.OperationalError as e:
+                logger.warning(f"Could not add verification_code column: {e}")
+        
+        # Check if email_verified column exists, if not add it
+        if 'email_verified' not in columns:
+            try:
+                cursor.execute("ALTER TABLE users ADD COLUMN email_verified INTEGER DEFAULT 0")
+                logger.info("Added email_verified column to users table")
+            except sqlite3.OperationalError as e:
+                logger.warning(f"Could not add email_verified column: {e}")
+        
+        # Create user_dbs table if it doesn't exist
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS user_dbs (
                 user_id INTEGER,
                 db_name TEXT,
@@ -111,20 +138,11 @@ def init_user_db():
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )
         """)
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS email_verifications (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                email TEXT NOT NULL,
-                otp_code TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                expires_at TIMESTAMP,
-                verified INTEGER DEFAULT 0
-            )
-        """)
         conn.commit()
 
 init_user_db()
 
+# ---------- Create demo.db ----------
 def create_demo_db():
     db_path = os.path.join(DB_FOLDER, "")
     with sqlite3.connect(db_path) as conn:
@@ -271,6 +289,7 @@ def create_demo_db():
         """)
         conn.commit()
 
+# ---------- Flask-Login Setup ----------
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login_page"
@@ -291,54 +310,80 @@ def load_user(user_id):
             return User(user[0], user[1], user[2])
         return None
 
+# ============================================================================
+# Application Routes
+# ============================================================================
+
 @app.route("/")
 def index():
-    return redirect("/app")
-    
+    """Landing page - redirects authenticated users to app."""
+    if current_user.is_authenticated:
+        return redirect("/app")
+    return render_template("index.html")
+
 
 @app.route("/auth")
 def auth_page():
+    """Authentication page - redirects authenticated users to app."""
+    if current_user.is_authenticated:
+        return redirect("/app")
     return render_template("auth.html")
 
 @app.route("/tool")
 def tool():
+    """Render the main application tool page."""
     return render_template("app.html")
+
+
 @app.route("/app")
 def app_page():
+    """Render the main application page."""
     return render_template("index.html")
 
-@app.route('/favicon.ico')
-def favicon():
-    return send_from_directory(os.path.join(app.root_path, 'static'),
-                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
-@app.route('/google8c1160341f6a72b4.html')
-def google_verification():
-    return send_from_directory('.', 'google8c1160341f6a72b4.html')
-def generate_otp():
-    """Generate a 6-digit OTP code"""
+def generate_verification_code():
+    """Generate a 6-digit verification code"""
     return ''.join(random.choices(string.digits, k=6))
 
-def send_otp_email(email, otp_code):
-    """Send OTP verification email"""
+def send_verification_email(email, code):
+    """Send verification email using Resend API"""
+    if not RESEND_API_KEY:
+        logger.error("RESEND_API_KEY not configured")
+        return False
+    
+    url = "https://api.resend.com/emails"
+    headers = {
+        "Authorization": f"Bearer {RESEND_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "from": RESEND_FROM_EMAIL,
+        "to": [email],
+        "subject": "Verify Your Email - SQL Nurse",
+        "html": f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #4361ee;">Email Verification</h2>
+            <p>Thank you for signing up for SQL Nurse!</p>
+            <p>Your verification code is:</p>
+            <div style="background: #f8f9fa; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; color: #4361ee; letter-spacing: 5px; border-radius: 8px; margin: 20px 0;">
+                {code}
+            </div>
+            <p>Enter this code in the verification popup to complete your registration.</p>
+            <p style="color: #6c757d; font-size: 12px;">This code will expire in 10 minutes.</p>
+        </div>
+        """,
+        "text": f"Your verification code is: {code}\n\nEnter this code in the verification popup to complete your registration."
+    }
+    
     try:
-        msg = Message(
-            subject='SQL Nurse - Email Verification Code',
-            sender=app.config['MAIL_USERNAME'],
-            recipients=[email]
-        )
-        msg.body = f"""
-        Thank you for signing up for SQL Nurse!
-        
-        Your verification code is: {otp_code}
-        
-        This code will expire in 10 minutes.
-        
-        If you didn't sign up for SQL Nurse, please ignore this email.
-        """
-        mail.send(msg)
-        return True
+        response = requests.post(url, json=data, headers=headers)
+        if response.status_code in [200, 201]:
+            logger.info(f"Verification email sent to {email}")
+            return True
+        else:
+            logger.error(f"Failed to send email: {response.status_code} - {response.text}")
+            return False
     except Exception as e:
-        logger.error(f"Failed to send email: {str(e)}")
+        logger.error(f"Error sending verification email: {str(e)}")
         return False
 
 @app.route("/signup", methods=["POST"])
@@ -346,7 +391,7 @@ def signup():
     data = request.json
     email = data.get("email")
     password = data.get("password")
-    otp_code = data.get("otp_code")  # For verification step
+    otp_code = data.get("otp_code")
     
     if not email or not password:
         return jsonify({"error": "Email and password are required"}), 400
@@ -354,56 +399,79 @@ def signup():
     try:
         with sqlite3.connect(USER_DB) as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT id FROM users WHERE email = ?", (email,))
-            if cursor.fetchone():
-                return jsonify({"error": "Email already registered"}), 400
+            cursor.execute("SELECT id, email_verified, verification_code FROM users WHERE email = ?", (email,))
+            existing_user = cursor.fetchone()
             
-            # If OTP code is provided, verify it
-            if otp_code:
-                cursor.execute("""
-                    SELECT id FROM email_verifications 
-                    WHERE email = ? AND otp_code = ? AND verified = 0 
-                    AND expires_at > datetime('now')
-                """, (email, otp_code))
-                verification = cursor.fetchone()
-                if not verification:
-                    return jsonify({"error": "Invalid or expired verification code"}), 400
+            if existing_user:
+                user_id, email_verified, stored_code = existing_user
                 
-                # Mark verification as used
-                cursor.execute("UPDATE email_verifications SET verified = 1 WHERE email = ? AND otp_code = ?", 
-                             (email, otp_code))
-                
-                # Create user account
+                # If OTP code is provided, verify it
+                if otp_code:
+                    if email_verified:
+                        return jsonify({"error": "Email already verified"}), 400
+                    # Strip whitespace and compare codes
+                    stored_code_clean = str(stored_code).strip() if stored_code else None
+                    otp_code_clean = str(otp_code).strip() if otp_code else None
+                    logger.info(f"Verifying code - stored: '{stored_code_clean}' (type: {type(stored_code)}), provided: '{otp_code_clean}' (type: {type(otp_code)})")
+                    if not stored_code_clean:
+                        return jsonify({"error": "No verification code found. Please request a new code."}), 400
+                    if not otp_code_clean:
+                        return jsonify({"error": "Please enter a verification code."}), 400
+                    if stored_code_clean == otp_code_clean:
+                        # Verify email
+                        cursor.execute(
+                            "UPDATE users SET email_verified = 1, verification_code = NULL WHERE id = ?",
+                            (user_id,)
+                        )
+                        conn.commit()
+                        
+                        # Get subscription tier
+                        cursor.execute("SELECT subscription_tier FROM users WHERE id = ?", (user_id,))
+                        tier = cursor.fetchone()[0]
+                        user = User(user_id, email, tier)
+                        login_user(user)
+                        
+                        return jsonify({
+                            "status": "success",
+                            "message": "Email verified successfully!",
+                            "tier": tier,
+                            "redirect": "/app"
+                        })
+                    else:
+                        return jsonify({"error": "Invalid verification code"}), 400
+                else:
+                    # Resend verification code
+                    if email_verified:
+                        return jsonify({"error": "Email already verified. Please login."}), 400
+                    
+                    code = generate_verification_code()
+                    cursor.execute(
+                        "UPDATE users SET verification_code = ? WHERE id = ?",
+                        (code, user_id)
+                    )
+                    conn.commit()
+                    
+                    if send_verification_email(email, code):
+                        return jsonify({
+                            "status": "otp_sent",
+                            "message": "Verification code sent to your email. Please check your inbox."
+                        })
+                    else:
+                        return jsonify({"error": "Failed to send verification email. Please try again."}), 500
+            else:
+                # New user signup
                 hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-                subscription_tier = "premium"
+                subscription_tier = "free"
+                code = generate_verification_code()
+                
                 cursor.execute(
-                    "INSERT INTO users (email, password, subscription_tier, email_verified) VALUES (?, ?, ?, ?)",
-                    (email, hashed_pw, subscription_tier, 1)
+                    "INSERT INTO users (email, password, subscription_tier, email_verified, verification_code) VALUES (?, ?, ?, 0, ?)",
+                    (email, hashed_pw, subscription_tier, code)
                 )
                 conn.commit()
                 user_id = cursor.lastrowid
-                user = User(user_id, email, subscription_tier)
-                login_user(user)
-                return jsonify({
-                    "status": "success",
-                    "message": "You are signed up successfully!",
-                    "tier": subscription_tier,
-                    "redirect":  "/tool",
-                })
-            else:
-                # Generate and send OTP
-                otp = generate_otp()
-                expires_at = datetime.now() + timedelta(minutes=10)
                 
-                # Store OTP in database
-                cursor.execute("""
-                    INSERT INTO email_verifications (email, otp_code, expires_at)
-                    VALUES (?, ?, ?)
-                """, (email, otp, expires_at))
-                conn.commit()
-                
-                # Send email
-                if send_otp_email(email, otp):
+                if send_verification_email(email, code):
                     return jsonify({
                         "status": "otp_sent",
                         "message": "Verification code sent to your email. Please check your inbox."
@@ -425,23 +493,24 @@ def login():
     try:
         with sqlite3.connect(USER_DB) as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT id, email, password, subscription_tier FROM users WHERE email = ?", (email,))
+            cursor.execute("SELECT id, email, password, subscription_tier, email_verified FROM users WHERE email = ?", (email,))
             user = cursor.fetchone()
             if user and bcrypt.checkpw(password.encode('utf-8'), user[2]):
+                if not user[4]:  # email_verified is False
+                    return jsonify({"error": "Please verify your email before logging in. Check your inbox for the verification code."}), 401
                 login_user(User(user[0], user[1], user[3]))
                 return jsonify({
                     "status": "Logged in",
                     "tier": user[3],
-                    "redirect": "/tool"
+                    "redirect": "/app"
                 })
             return jsonify({"error": "Invalid credentials"}), 401
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
+
 @app.route("/google-login", methods=["GET"])
 def google_login():
-    if not google:
-        flash("Google OAuth not configured", "error")
-        return redirect(url_for("auth_page"))
     callback_url = url_for('google_auth_callback', _external=True)
     nonce = secrets.token_urlsafe(16)
     session['google_nonce'] = nonce
@@ -472,12 +541,12 @@ def google_auth_callback():
             user = cursor.fetchone()
             if not user:
                 cursor.execute(
-                    "INSERT INTO users (email, password, subscription_tier) VALUES (?, ?, ?)",
-                    (email, "", "premium")  # No password for OAuth users
+                    "INSERT INTO users (email, password, subscription_tier, email_verified) VALUES (?, ?, ?, 1)",
+                    (email, "", "premium", 1)  # No password for OAuth users, email verified by OAuth
                 )
                 conn.commit()
                 user_id = cursor.lastrowid
-                user = (user_id, email, "free")
+                user = (user_id, email, "premium")
             login_user(User(user[0], user[1], user[2]))
         flash("Logged in successfully via Google!", "success")
         return redirect(url_for("tool"))
@@ -486,11 +555,9 @@ def google_auth_callback():
         flash(f"Google login failed: {str(e)}", "error")
         return redirect(url_for("auth_page"))
 
+
 @app.route("/github-login", methods=["GET"])
 def github_login():
-    if not github:
-        flash("GitHub OAuth not configured", "error")
-        return redirect(url_for("auth_page"))
     callback_url = url_for('github_auth_callback', _external=True)
     logger.debug(f"Initiating GitHub login with callback: {callback_url}")
     try:
@@ -530,31 +597,34 @@ def github_auth_callback():
             user = cursor.fetchone()
             if not user:
                 cursor.execute(
-                    "INSERT INTO users (email, password, subscription_tier) VALUES (?, ?, ?)",
-                    (email, "", "premium")
+                    "INSERT INTO users (email, password, subscription_tier, email_verified) VALUES (?, ?, ?, 1)",
+                    (email, "", "premium", 1)  # No password for OAuth users, email verified by OAuth
                 )
                 conn.commit()
                 user_id = cursor.lastrowid
-                user = (user_id, email, "free")
+                user = (user_id, email, "premium")
             login_user(User(user[0], user[1], user[2]))
         flash("Logged in successfully via GitHub!", "success")
-        return redirect(url_for("tool"))
+        return redirect(url_for("app_page"))
     except Exception as e:
         logger.error(f"GitHub login failed: {str(e)}")
         flash(f"GitHub login failed: {str(e)}", "error")
         return redirect(url_for("auth_page"))
 
+
 @app.route("/logout", methods=["POST"])
+@login_required
 def logout():
-    if current_user.is_authenticated:
-        logout_user()
-    return jsonify({"status": "Logged out", "message": "You are successfully logged out"})
+    logout_user()
+    return jsonify({"status": "Logged out"})
+
 
 @app.route("/user_info", methods=["GET"])
 def user_info():
     if current_user.is_authenticated:
         return jsonify({"email": current_user.email, "tier": current_user.subscription_tier})
     return jsonify({"error": "Not logged in"}), 401
+
 
 @app.route("/public_databases", methods=["GET"])
 def public_databases():
@@ -681,9 +751,27 @@ def run_sql(conn, query):
     except Exception as e:
         return {"error": str(e)}
 
+# ============================================================================
+# Database Connection and Schema Functions
+# ============================================================================
+
 def get_connection(db_type, **kwargs):
-    """Return DB connection (SQLite, MySQL, PostgreSQL)"""
-    if db_type.lower() == "sqlite":
+    """
+    Create and return database connection based on type.
+    
+    Args:
+        db_type: Type of database ('sqlite', 'mysql', 'postgresql')
+        **kwargs: Connection parameters (path, host, port, user, password, database)
+        
+    Returns:
+        Database connection object
+        
+    Raises:
+        ValueError: If DB type is unsupported or required parameters are missing
+    """
+    db_type_lower = db_type.lower()
+    
+    if db_type_lower == "sqlite":
         path = kwargs.get("path")
         if not os.path.exists(path):
             raise ValueError("SQLite DB file not found!")
@@ -692,7 +780,8 @@ def get_connection(db_type, **kwargs):
         conn.execute("PRAGMA journal_mode=WAL;")
         conn.execute("PRAGMA case_sensitive_like = OFF;")
         return conn
-    elif db_type.lower() == "mysql":
+    
+    elif db_type_lower == "mysql":
         conn = pymysql.connect(
             host=kwargs.get("host"),
             port=int(kwargs.get("port", 3306)),
@@ -703,7 +792,8 @@ def get_connection(db_type, **kwargs):
             cursorclass=pymysql.cursors.DictCursor
         )
         return conn
-    elif db_type.lower() == "postgresql":
+    
+    elif db_type_lower == "postgresql":
         conn = psycopg2.connect(
             host=kwargs.get("host"),
             port=int(kwargs.get("port", 5432)),
@@ -712,38 +802,61 @@ def get_connection(db_type, **kwargs):
             dbname=kwargs.get("database")
         )
         return conn
+    
     else:
         raise ValueError(f"Unsupported DB type: {db_type}")
 
+
 def get_schema(conn, db_type):
-    """Return schema for any DB with lowercase table/column names"""
+    """
+    Extract database schema with lowercase table/column names.
+    
+    Args:
+        conn: Database connection
+        db_type: Type of database ('sqlite', 'mysql', 'postgresql')
+        
+    Returns:
+        dict: Schema dictionary with table names as keys and column info as values
+    """
     schema = {}
     cursor = conn.cursor()
-    if db_type.lower() == "sqlite":
+    db_type_lower = db_type.lower()
+    
+    if db_type_lower == "sqlite":
         tables = cursor.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';"
         ).fetchall()
         for (table_name,) in tables:
             cols = cursor.execute(f"PRAGMA table_info({table_name});").fetchall()
-            schema[table_name.lower()] = [{"name": c[1].lower(), "type": c[2]} for c in cols]
-    elif db_type.lower() == "mysql":
+            schema[table_name.lower()] = [
+                {"name": c[1].lower(), "type": c[2]} for c in cols
+            ]
+    
+    elif db_type_lower == "mysql":
         cursor.execute("SHOW TABLES;")
         tables = [list(row.values())[0] for row in cursor.fetchall()]
         for table in tables:
             cursor.execute(f"DESCRIBE {table};")
             cols = cursor.fetchall()
-            schema[table.lower()] = [{"name": c['Field'].lower(), "type": c['Type']} for c in cols]
-    elif db_type.lower() == "postgresql":
+            schema[table.lower()] = [
+                {"name": c['Field'].lower(), "type": c['Type']} for c in cols
+            ]
+    
+    elif db_type_lower == "postgresql":
         cursor.execute(
             "SELECT table_name FROM information_schema.tables WHERE table_schema='public';"
         )
         tables = [row[0] for row in cursor.fetchall()]
         for table in tables:
             cursor.execute(
-                f"SELECT column_name, data_type FROM information_schema.columns WHERE table_name='{table}';"
+                f"SELECT column_name, data_type FROM information_schema.columns "
+                f"WHERE table_name='{table}';"
             )
             cols = cursor.fetchall()
-            schema[table.lower()] = [{"name": c[0].lower(), "type": c[1]} for c in cols]
+            schema[table.lower()] = [
+                {"name": c[0].lower(), "type": c[1]} for c in cols
+            ]
+    
     return schema
 
 @app.route("/schema", methods=["POST"])
@@ -822,11 +935,6 @@ def db_description():
         return jsonify({"description": description})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-
-@app.route('/site.webmanifest')
-def manifest():
-    return send_from_directory('static', 'site.webmanifest')
-
 
 @app.route("/ask", methods=["POST"])
 def ask():

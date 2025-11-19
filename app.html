@@ -174,16 +174,51 @@ table {
     box-shadow: var(--box-shadow);
     border-radius: var(--border-radius);
     overflow: hidden;
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+thead, tbody {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
 }
 th, td {
     border: 1px solid var(--gray-light);
-    padding: 12px;
+    padding: 8px;
     text-align: left;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 200px;
+    font-size: 0.9rem;
 }
 th {
     background: var(--primary);
     color: white;
     font-weight: 600;
+    position: sticky;
+    top: 0;
+}
+/* Responsive table - adjust column width based on number of columns */
+table[style*="table-layout: fixed"] th,
+table[style*="table-layout: fixed"] td {
+    max-width: none;
+}
+/* For tables with many columns, reduce padding and font size */
+#results table,
+#table_editor table {
+    table-layout: auto;
+}
+#results table th,
+#results table td,
+#table_editor table th,
+#table_editor table td {
+    min-width: 80px;
+    max-width: 150px;
+    padding: 6px 8px;
+    font-size: 0.85rem;
+    white-space: normal;
+    word-break: break-word;
 }
 pre {
     background: var(--gray-light);
@@ -251,6 +286,50 @@ pre {
 #popup button {
     padding: 10px 20px;
     margin: 0 5px;
+}
+/* Success Modal Styles */
+#success-modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 30px;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--gray-light);
+    z-index: 2001;
+    text-align: center;
+    max-width: 450px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    animation: fadeIn 0.3s ease;
+}
+#success-modal .success-icon {
+    font-size: 3rem;
+    color: var(--success);
+    margin-bottom: 15px;
+}
+#success-modal h3 {
+    color: var(--dark);
+    margin-bottom: 10px;
+}
+#success-modal p {
+    color: var(--gray);
+    margin-bottom: 20px;
+}
+#success-modal button {
+    padding: 10px 30px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+}
+#success-modal button:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
 }
 #overlay {
     display: none;
@@ -340,6 +419,13 @@ pre {
     <p id="popup-message" data-i18n="popup_message"></p>
     <button onclick="goToSubscriptions()" data-i18n="subscribe_now">Subscribe Now</button>
     <button onclick="closePopup()" data-i18n="close">Close</button>
+</div>
+<!-- Success Modal -->
+<div id="success-modal">
+    <div class="success-icon">✓</div>
+    <h3 id="success-title"></h3>
+    <p id="success-message"></p>
+    <button onclick="closeSuccessModal()">OK</button>
 </div>
 <div style="margin: 20px; width: 150px;">
     <a href="{{ url_for('app_page') }}">
@@ -1279,6 +1365,18 @@ function closePopup() {
     document.getElementById('overlay').style.display = 'none';
 }
 
+function showSuccessModal(title, message) {
+    document.getElementById('success-title').textContent = title;
+    document.getElementById('success-message').textContent = message;
+    document.getElementById('success-modal').style.display = 'block';
+    document.getElementById('overlay').style.display = 'block';
+}
+
+function closeSuccessModal() {
+    document.getElementById('success-modal').style.display = 'none';
+    document.getElementById('overlay').style.display = 'none';
+}
+
 function goToSubscriptions() {
     closePopup();
     openTab({currentTarget: document.querySelector(`button[onclick*='Subscriptions']`)}, 'Subscriptions');
@@ -1524,15 +1622,17 @@ async function askQuery() {
         div.innerText = data.result.error;
         return;
     }
-    let html = "<table><thead><tr>";
-    data.result.columns.forEach(c => html += `<th>${c}</th>`);
+    let html = "<div style='overflow-x: auto; width: 100%;'><table style='table-layout: auto; min-width: 100%;'><thead><tr>";
+    const colCount = data.result.columns.length;
+    const colWidth = colCount > 10 ? '80px' : colCount > 5 ? '120px' : '150px';
+    data.result.columns.forEach(c => html += `<th style='min-width: ${colWidth}; max-width: ${colWidth};'>${c}</th>`);
     html += "</tr></thead><tbody>";
     data.result.rows.forEach(r => {
         html += "<tr>";
-        data.result.columns.forEach(c => html += `<td>${r[c]}</td>`);
+        data.result.columns.forEach(c => html += `<td style='min-width: ${colWidth}; max-width: ${colWidth};'>${r[c] || ''}</td>`);
         html += "</tr>";
     });
-    html += "</tbody></table>";
+    html += "</tbody></table></div>";
     div.innerHTML = html;
 }
 async function loadTables() {
@@ -1626,17 +1726,19 @@ async function loadTableRows() {
         if (!data.result || !data.result.columns || !data.result.rows) {
             throw new Error("Invalid response format from server");
         }
-        let html = "<table><thead><tr>";
-        data.result.columns.forEach(c => html += `<th>${c}</th>`);
-        html += `<th>${translations[currentLanguage].actions || "Actions"}</th></tr></thead><tbody>`;
+        let html = "<div style='overflow-x: auto; width: 100%;'><table style='table-layout: auto; min-width: 100%;'><thead><tr>";
+        const colCount = data.result.columns.length + 1; // +1 for Actions column
+        const colWidth = colCount > 10 ? '80px' : colCount > 5 ? '120px' : '150px';
+        data.result.columns.forEach(c => html += `<th style='min-width: ${colWidth}; max-width: ${colWidth};'>${c}</th>`);
+        html += `<th style='min-width: 100px; max-width: 100px;'>${translations[currentLanguage].actions || "Actions"}</th></tr></thead><tbody>`;
         const keyCol = data.result.columns[0];
         data.result.rows.forEach(r => {
             html += "<tr>";
-            data.result.columns.forEach(c => html += `<td>${r[c]}</td>`);
-            html += `<td><button onclick='deleteRow("${db}","${table}","${keyCol}=${r[keyCol]}")' data-i18n="delete">${translations[currentLanguage].delete || "Delete"}</button></td>`;
+            data.result.columns.forEach(c => html += `<td style='min-width: ${colWidth}; max-width: ${colWidth};'>${r[c] || ''}</td>`);
+            html += `<td style='min-width: 100px; max-width: 100px;'><button onclick='deleteRow("${db}","${table}","${keyCol}=${r[keyCol]}")' data-i18n="delete">${translations[currentLanguage].delete || "Delete"}</button></td>`;
             html += "</tr>";
         });
-        html += "</tbody></table>";
+        html += "</tbody></table></div>";
         div.innerHTML = html;
     } catch (err) {
         document.getElementById("table_editor").innerText = translations[currentLanguage].table_load_error + ": " + err;
@@ -1686,8 +1788,18 @@ async function createDB() {
     }
     const resp = await fetch("/create_db", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({db_name, prompt}), credentials: 'include'});
     const data = await resp.json();
-    document.getElementById("create_db_result").innerText = data.error ? data.error : "Database Created!\n" + data.sql_schema;
-    loadDatabases();
+    if (data.error) {
+        document.getElementById("create_db_result").innerText = data.error;
+        showPopup(data.error);
+    } else {
+        document.getElementById("create_db_result").innerText = "Database Created!\n" + data.sql_schema;
+        // Clear form
+        document.getElementById("new_db_name").value = "";
+        document.getElementById("db_prompt").value = "";
+        // Show success modal
+        showSuccessModal("Database Created!", `Database "${db_name}" has been created successfully!`);
+        loadDatabases();
+    }
 }
 async function generateVisualization() {
     if (userTier !== 'premium') {
@@ -1738,7 +1850,8 @@ async function generateVisualization() {
         '#64B5F6', '#FFD54F', '#81C784', '#BA68C8'
     ];
     const backgroundColors = labels.map((_, i) => vibrantColors[i % vibrantColors.length]);
-    const borderColors = labels.map((_, i) => vibrantColors[i % vibrantColors.length]);
+    // Use grey for border colors instead of vibrant colors
+    const borderColors = labels.map(() => '#6c757d'); // Grey color
 
     if (vizChart) vizChart.destroy();
 
@@ -1760,20 +1873,24 @@ async function generateVisualization() {
             plugins: {
                 legend: {
                     display: true,
-                    labels: { color: isLight ? '#333333' : '#e0e0e0' }
+                    labels: { color: '#000000' } // Black text for names/entries
                 },
                 title: {
                     display: true,
                     text: prompt,
-                    color: isLight ? '#333333' : '#e0e0e0',
+                    color: '#000000', // Black text for title
                     font: { size: 18 }
                 }
             },
             scales: {
-                x: { ticks: { color: isLight ? '#333333' : '#e0e0e0' } },
+                x: { 
+                    ticks: { color: '#000000' }, // Black text for axis labels
+                    grid: { color: '#6c757d' } // Grey grid lines
+                },
                 y: {
-                    ticks: { color: isLight ? '#333333' : '#e0e0e0' },
-                    beginAtZero: true
+                    ticks: { color: '#000000' }, // Black text for axis values
+                    beginAtZero: true,
+                    grid: { color: '#6c757d' } // Grey grid lines
                 }
             }
         }
@@ -1871,17 +1988,20 @@ async function handleAppLogout() {
         });
         const data = await response.json();
         
-        // Show success popup
-        alert('You are successfully logged out');
+        // Show success modal
+        showSuccessModal("Logged Out", "You have been successfully logged out!");
         
-        // Update navbar
-        checkAppAuthStatus();
-        
-        // Redirect to home
-        window.location.href = '/';
+        // Update navbar after a short delay
+        setTimeout(() => {
+            checkAppAuthStatus();
+            // Redirect to home after modal is closed
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 500);
+        }, 1500);
     } catch (err) {
         console.error('Logout error:', err);
-        alert('Error logging out. Please try again.');
+        showPopup('Error logging out. Please try again.');
     }
 }
 

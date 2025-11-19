@@ -762,7 +762,7 @@ footer {
  <section class="hero-section">
   <h1 data-i18n="hero_title">Revolutionize Your Database Management</h1>
   <p data-i18n="hero_subtitle">SQL Nurse is an all-in-one platform that simplifies database interaction, query generation, table management, and data visualization with an intuitive interface.</p>
-  <button class="btn btn-outline btn-small" onclick="window.location.href='/auth'" data-i18n="get_started">Get Started</button>
+  <button class="btn btn-outline btn-small" onclick="handleGetStarted()" data-i18n="get_started">Get Started</button>
  </section>
 
  <section class="section" id="features">
@@ -896,7 +896,7 @@ footer {
  <section class="section final-cta">
   <h2 data-i18n="cta_title">Ready to Transform Your Database Workflow?</h2>
   <p data-i18n="cta_subtitle">Join thousands of users who have simplified their database management with SQL Nurse.</p>
-  <button class="btn btn-outline btn-small" onclick="window.location.href='/auth'" id="final-cta-btn" data-i18n="get_started">Get Started</button>
+  <button class="btn btn-outline btn-small" onclick="handleGetStarted()" id="final-cta-btn" data-i18n="get_started">Get Started</button>
  </section>
 
  <footer>
@@ -913,14 +913,14 @@ footer {
    </div>
    <div class="footer-section">
     <h3 data-i18n="footer_company">Company</h3>
-    <a href="#" data-i18n="footer_about">About Us</a>
-    <a href="#" data-i18n="footer_blog">Blog</a>
-    <a href="#" data-i18n="footer_contact">Contact</a>
+    <p style="color: rgba(255, 255, 255, 0.7);">About Us</p>
+    <p style="color: rgba(255, 255, 255, 0.7);">Blog</p>
+    <p style="color: rgba(255, 255, 255, 0.7);">Contact</p>
    </div>
    <div class="footer-section">
     <h3 data-i18n="footer_legal">Legal</h3>
-    <a href="#" data-i18n="footer_privacy">Privacy Policy</a>
-    <a href="#" data-i18n="footer_terms">Terms of Service</a>
+    <p style="color: rgba(255, 255, 255, 0.7);">Privacy Policy</p>
+    <p style="color: rgba(255, 255, 255, 0.7);">Terms of Service</p>
    </div>
   </div>
   <div class="footer-bottom">
@@ -1962,6 +1962,26 @@ async function handleLogout() {
 
 // Initialize auth status on page load
 checkAuthStatus();
+
+// Handle Get Started button - check if user is logged in first
+async function handleGetStarted() {
+    try {
+        const response = await fetch('/user_info', { credentials: 'include' });
+        if (response.ok) {
+            const data = await response.json();
+            if (data.email) {
+                // User is logged in, redirect to tool
+                window.location.href = '/tool';
+                return;
+            }
+        }
+        // User is not logged in, redirect to auth
+        window.location.href = '/auth';
+    } catch (err) {
+        // On error, redirect to auth
+        window.location.href = '/auth';
+    }
+}
 
 // Auth modal functionality
 function showAuthModal(defaultTab = 'signup') {
