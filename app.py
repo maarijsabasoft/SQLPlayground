@@ -553,7 +553,7 @@ def google_auth_callback():
     except Exception as e:
         logger.error(f"Google login failed: {str(e)}")
         flash(f"Google login failed: {str(e)}", "error")
-        return redirect(url_for("auth_page"))
+        return redirect("/tool")
 
 
 @app.route("/github-login", methods=["GET"])
